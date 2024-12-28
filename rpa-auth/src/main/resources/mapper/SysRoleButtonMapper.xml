@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.SysRoleButtonDao">
+
+    <update id="saveRoleButton">
+        insert into sys_role_button(role_id,button_id)
+        select #{roleId}, sb.id from sys_button sb
+        left join sys_menu sm on sb.menu_id=sm.id
+        where sm.menu_type=2 and sm.module_code in
+        <foreach collection="moduleCodes" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="removeCustOtherButton">
+        delete from sys_role_button
+        where role_id in
+        <foreach collection="roleIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and buttonIds in
+        <foreach collection="buttonIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

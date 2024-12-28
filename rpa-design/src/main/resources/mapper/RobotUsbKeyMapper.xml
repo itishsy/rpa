@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotUsbKeyDao">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.vo.RobotUsbKeyVO">
+        <id property="id" column="id"/>
+        <result property="usbKeyId" column="usb_key_id"/>
+        <result property="clientId" column="client_id"/>
+        <result property="appCode" column="app_code"/>
+        <result property="taskCode" column="task_code"/>
+        <result property="declareAccount" column="declare_account"/>
+        <result property="companyName" column="company_name"/>
+        <result property="declareSystem" column="declare_system"/>
+        <result property="remark" column="remark"/>
+        <result property="certEffeStartTime" column="cert_effe_start_time"/>
+        <result property="certEffeEndTime" column="cert_effe_end_time"/>
+        <result property="disabled" column="disabled"/>
+        <result property="createId" column="create_id"/>
+        <result property="createName" column="create_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="appName" column="app_name"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ke.id,ke.usb_key_id,ke.client_id, ke.app_code,ke.task_code,ke.declare_account,ke.company_name,ke.declare_system,ke.remark,ke.cert_effe_start_time,ke.cert_effe_end_time ,ke.disabled,ke.create_time,ke.create_id,
+        ke.create_name,ke.update_time
+    </sql>
+
+    <select id="selectByParams" resultMap="BaseResultMap">
+        SELECT
+             <include refid="Base_Column_List"/>,
+            ra.app_name
+        FROM
+            robot_usb_key ke
+        LEFT JOIN robot_app ra ON ra.app_code = ke.app_code
+        <include refid="whereByParams"/>
+        <if test="size != null">
+            limit #{start},#{size}
+        </if>
+    </select>
+
+    <select id="countByParams" resultType="int">
+        SELECT
+          count(1)
+        FROM
+            robot_usb_key ke
+        LEFT JOIN robot_app ra ON ra.app_code = ke.app_code
+        <include refid="whereByParams"/>
+    </select>
+
+    <sql id="whereByParams">
+        <where>
+            <if test="id != null">
+                and ke.id = #{id}
+            </if>
+            <if test="clientId != null and clientId != ''">
+                and ke.client_id = #{clientId}
+            </if>
+            <if test="usbKeyId != null and usbKeyId != ''">
+                and ke.usb_key_id = #{usbKeyId}
+            </if>
+            <if test="appCode != null and appCode != ''">
+                and ke.app_code = #{appCode}
+            </if>
+            <if test="taskCode != null and taskCode != ''">
+                and ke.task_code = #{taskCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and (ra.app_name like concat('%',#{keyword},'%')  or ke.declare_account like concat('%',#{keyword},'%') or ke.company_name like concat('%',#{keyword},'%'))
+            </if>
+            <if test="status != null and status != ''">
+                and ke.status = #{status}
+            </if>
+            <if test="declareSystem != null and declareSystem !=''">
+                and ke.declare_system = #{declareSystem}
+            </if>
+            <if test="usbKeyIds !=null and usbKeyIds.size()>0">
+                and ke.usb_key_id in
+                <foreach collection="usbKeyIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </sql>
+
+    <delete id="deleteByUsbKeyId">
+        delete from robot_usb_key where usb_key_id = #{usbKeyId}
+    </delete>
+
+    <insert id="insertUsbKey">
+        insert into robot_usb_key(usb_key_id,client_id,app_code,task_code,declare_account,company_name,declare_system,remark,cert_effe_start_time,cert_effe_end_time,disabled,create_id,create_name,create_time,update_time)
+        values(#{usbKeyId},#{clientId},#{appCode},#{taskCode},#{declareAccount},#{companyName},#{declareSystem},#{remark},#{certEffeStartTime},#{certEffeEndTime},#{disabled},#{createId},#{createName},now(),now())
+    </insert>
+</mapper>

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotFlowStepDao">
+    <resultMap id="RobotClientExecutionDetailVOMap" type="com.seebon.rpa.entity.robot.dto.design.RobotClientExecutionDetailVO">
+        <result column="id" property="id" />
+        <result column="execution_code" property="executionCode"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="step_code" property="stepCode"/>
+        <result column="step_name" property="stepName"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="error" property="error"/>
+        <result column="flow_type" property="flowType" />
+        <collection property="robotExecutionFileInfos" ofType="com.seebon.rpa.entity.robot.dto.design.RobotExecutionFileInfo">
+            <result column="fileInfoId" property="id"/>
+            <result column="file_name" property="fileName"/>
+            <result column="file_full_path" property="fileFullPath"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="flowStepMap" type="com.seebon.rpa.entity.robot.RobotFlowStep">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="flow_code" jdbcType="VARCHAR" property="flowCode"/>
+        <result column="group_code" jdbcType="VARCHAR" property="groupCode"/>
+        <result column="step_code" jdbcType="VARCHAR" property="stepCode"/>
+        <result column="step_name" jdbcType="VARCHAR" property="stepName"/>
+        <result column="action_code" jdbcType="VARCHAR" property="actionCode"/>
+        <result column="target_args" jdbcType="VARCHAR" property="targetArgs"/>
+        <result column="action_args" jdbcType="VARCHAR" property="actionArgs"/>
+        <result column="number" jdbcType="INTEGER" property="number"/>
+        <result column="failed_retry" jdbcType="INTEGER" property="failedRetry"/>
+        <result column="failed_strategy" jdbcType="INTEGER" property="failedStrategy"/>
+        <result column="failed_skip_to" jdbcType="VARCHAR" property="failedSkipTo"/>
+        <result column="skip_to" jdbcType="VARCHAR" property="skipTo"/>
+        <result column="false_skip_to" jdbcType="VARCHAR" property="falseSkipTo"/>
+        <result column="skip_condition" jdbcType="VARCHAR" property="skipCondition"/>
+        <result column="wait_before" jdbcType="INTEGER" property="waitBefore"/>
+        <result column="wait_after" jdbcType="INTEGER" property="waitAfter"/>
+        <result column="timeout" jdbcType="INTEGER" property="timeout"/>
+        <result column="max_execute_num" property="maxExecuteNum"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, flow_code, group_code, step_code, step_name, action_code,target_args,action_args,number,failed_retry,
+        failed_strategy,failed_skip_to,skip_to,false_skip_to,skip_condition,wait_before,wait_after,timeout,max_execute_num
+    </sql>
+
+    <delete id="deleteByFlowCode">
+        DELETE FROM robot_flow_step WHERE flow_code = #{flowCode}
+    </delete>
+
+    <delete id="deleteByFlowCodeAndGroupCode">
+        DELETE FROM robot_flow_step WHERE flow_code = #{flowCode} and group_code = #{groupCode}
+    </delete>
+
+    <delete id="deleteByFlowCodeNotGroupCode">
+        DELETE FROM robot_flow_step WHERE flow_code = #{flowCode} and group_code is null
+    </delete>
+
+    <update id="increaseStepNumber">
+        UPDATE robot_flow_step
+        SET `number` = (`number` + 1)
+        WHERE flow_code = #{flowCode}
+          AND `number` > #{stepNumber}
+    </update>
+
+    <select id="selectByFlowCode" resultMap="RobotClientExecutionDetailVOMap">
+        select red.id,
+               red.execution_code,
+               rfs.flow_code,
+               rfs.step_code,
+               rfs.step_name,
+               red.start_time,
+               red.end_time,
+               red.status,
+               red.error,
+               fileInfo.id as fileInfoId,
+               fileInfo.file_name,
+			   fileInfo.file_full_path
+        from robot_flow_step rfs
+        left join robot_execution_detail red
+        on rfs.flow_code = red.flow_code
+        left join robot_execution_file_info fileInfo on red.execution_code = fileInfo.execution_code
+		  and red.flow_code = fileInfo.flow_code and red.step_code = fileInfo.step_code
+		  where rfs.flow_code = #{flowCode} and rfs.step_code != #{stepCode}
+    </select>
+
+    <select id="selectByExecutionCode" resultType="com.seebon.rpa.entity.robot.dto.design.RobotExecutionFileInfo">
+        select
+               fi.id as fileInfoId,
+               fi.file_name fileName,
+			   fi.file_full_path fileFullPath,
+               fi.execution_code as executionCode,
+               fi.flow_code flowCode,
+               fi.step_code stepCode
+        from
+            robot_execution_file_info fi
+        where
+            fi.execution_code = #{executionCode}
+        and fi.flow_code in
+        <foreach collection="flowCodes" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and fi.step_code in
+        <foreach collection="stepCodes" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!--查询step-->
+    <select id="flowStepList" resultType="com.seebon.rpa.entity.robot.RobotFlowStep">
+        SELECT rfs.id,
+               rfs.step_code,
+               rfs.flow_code,
+               rfs.action_code,
+               rfs.action_args,
+               rfs.number,
+               rfs.step_name,
+               rfs.target_args,
+               rfs.timeout,
+               rfs.status,
+               rfs.failed_retry,
+               rfs.failed_strategy,
+               rfs.failed_skip_to,
+               rfs.skip_to,
+               rfs.skip_condition,
+               rfs.wait_before,
+               rfs.wait_after,
+               rfs.create_id,
+               rfs.level,
+               rfs.create_time,
+               rfs.update_id,
+               rfs.update_time,
+               rfs.max_execute_num
+        FROM
+            robot_flow_step AS rfs
+        LEFT JOIN robot_flow AS rf ON rfs.flow_code = rf.flow_code
+        LEFT JOIN robot_app AS ra ON rf.app_code = ra.app_code
+        WHERE ra.app_code = #{appCode}
+    </select>
+
+    <!--查询引用流程的subFlow-->
+    <select id="findSubFlowStep" resultType="com.seebon.rpa.entity.robot.RobotFlow">
+        SELECT rf.id,
+               rf.flow_code as flowCode,
+               rf.flow_name as flowName
+        FROM
+            robot_flow_step AS rfs
+                LEFT JOIN robot_flow AS rf ON rfs.flow_code = rf.flow_code
+                LEFT JOIN robot_app AS ra ON rf.app_code = ra.app_code
+        WHERE ra.app_code = #{appCode}
+            AND rfs.action_code = 'subFlow'
+            AND rfs.action_args = #{actionArgs}
+    </select>
+
+    <!--删除所有步骤-->
+    <delete id="deleteAllStep">
+        DELETE
+        rfs
+        FROM robot_flow_step AS rfs LEFT JOIN robot_flow AS rf
+        ON rfs.flow_code = rf.flow_code
+            LEFT JOIN robot_app AS ra ON rf.app_code = ra.app_code
+        WHERE ra.app_code =
+        #{appCode}
+    </delete>
+    <select id="selectRepeatStep" resultType="com.seebon.rpa.entity.robot.RobotFlowStep">
+        SELECT *
+        FROM robot_flow_step rfs
+        WHERE rfs.step_name = #{name}
+          AND rfs.flow_code = #{flowCode}
+    </select>
+
+    <select id="selectByStepCode" resultType="com.seebon.rpa.entity.robot.RobotFlowStep">
+        SELECT * FROM robot_flow_step rfs WHERE rfs.step_code = #{stepCode}
+    </select>
+
+    <select id="selectByGroupCode" resultType="com.seebon.rpa.entity.robot.RobotFlowStep">
+        SELECT * FROM robot_flow_step rfs WHERE rfs.flow_code = #{flowCode} and rfs.group_code = #{groupCode}
+    </select>
+
+    <select id="getByTargetArgs" resultMap="flowStepMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        robot_flow_step
+        WHERE
+            status=1
+        AND action_code = #{actionCode}
+        AND target_args like concat('%',#{targetArgs},'%')
+        AND flow_code = #{flowCode}
+        limit 1
+    </select>
+
+    <select id="getByActionArgs" resultMap="flowStepMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        robot_flow_step
+        WHERE
+            status=1
+        AND action_code = #{actionCode}
+        AND action_args like concat('%',#{actionArgs},'%')
+        AND flow_code = #{flowCode}
+        limit 1
+    </select>
+</mapper>

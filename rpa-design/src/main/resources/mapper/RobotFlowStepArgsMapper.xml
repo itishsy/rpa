@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotFlowStepArgsDao">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotFlowStepArgs">
+        <result column="id" property="id"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="group_code" property="groupCode"/>
+        <result column="step_code" property="stepCode"/>
+        <result column="target_args" property="targetArgs"/>
+        <result column="action_args" property="actionArgs"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        sa.id, sa.flow_code, sa.group_code, sa.step_code, sa.target_args, sa.action_args
+    </sql>
+
+    <select id="selectByAppCode" resultMap="BaseResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_flow_step_args sa
+        INNER JOIN robot_flow AS rf ON rf.flow_code = sa.flow_code
+        INNER JOIN robot_app AS ra ON rf.app_code = ra.app_code
+        WHERE
+            ra.app_code = #{appCode}
+    </select>
+
+    <select id="selectByFlowCode" resultMap="BaseResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+             robot_flow_step_args sa
+        WHERE
+              sa.flow_code = #{flowCode}
+        <if test='groupCode!=null and groupCode!=""'>
+            and sa.group_code = #{groupCode}
+        </if>
+        <if test='stepCode!=null and stepCode!=""'>
+            and sa.step_code = #{stepCode}
+        </if>
+    </select>
+
+    <delete id="deleteByFlowCode">
+        DELETE FROM robot_flow_step_args WHERE flow_code = #{flowCode}
+    </delete>
+
+    <delete id="deleteByFlowCodeAndGroupCode">
+        DELETE FROM robot_flow_step_args WHERE flow_code = #{flowCode} and group_code = #{groupCode}
+    </delete>
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.MonitorStationDao">
+
+    <select id="getCityCount" resultType="java.util.Map">
+    select
+    sum(CASE WHEN online_status=2 or online_status=3 THEN 1 ELSE 0 END) leftPassCityCount,
+    sum(CASE WHEN run_status =0 THEN 1 ELSE 0 END) leftOfflineCityCount,
+    sum(CASE WHEN online_status =0 or online_status=1 THEN 1 ELSE 0 END) leftLiveCityCount,
+    count(1) rightPassCityCount,
+    sum(CASE WHEN run_status =0 THEN 1 ELSE 0 END) rightOfflineCityCount,
+    sum(CASE WHEN run_status =1 THEN 1 ELSE 0 END) rightLiveCityCount
+    from robot_app
+    </select>
+    <select id="getBoxCount" resultType="java.util.Map">
+        select count(1) boxCount,sum(CASE WHEN status =2 THEN 1 ELSE 0 END) boxExecutionCount,
+        sum(CASE WHEN status !=2 THEN 1 ELSE 0 END) boxSleepCount
+        from robot_client
+    </select>
+    <select id="getAccountCount" resultType="java.util.Map">
+    select
+    sum(CASE WHEN b.run=1 THEN 1 ELSE 0 END) declareRunCount,
+    sum(CASE WHEN b.run=0 THEN 1 ELSE 0 END) declareNoRunCount,
+    count(1) declareAccountCount
+    from robot_task_args a left join robot_task b
+    on a.task_code=b.task_code
+    where  a.args_key in ('accfundNumber','socialNumber')
+    </select>
+    <select id="getAppCount" resultType="java.util.Map">
+    select sum(CASE WHEN b.run=1 THEN 1 ELSE 0 END) appExecutionCount,
+    count(DISTINCT a.id) appCount
+    from robot_app a left join robot_task b
+    on a.app_code=b.app_code
+    </select>
+    <select id="getBoxExecutionTimeCount" resultType="java.lang.Long">
+        select sum(count_time) totalRunTime from robot_client
+    </select>
+    <select id="getTodayTaskCount" resultType="java.lang.Long">
+    select
+    count(
+    case when (rts.id is not null and rts.`status`=1) or
+    (rts.id is null and ras.id is not null) then 1 else null end)
+    from robot_task a
+    left join robot_flow b on a.app_code=b.app_code and b.flow_type=1
+    left join robot_app_schedule ras on b.flow_code=ras.flow_code
+    left join robot_task_schedule rts on a.task_code=rts.task_code and b.flow_code=rts.flow_code
+    where a.`status`=1
+    </select>
+
+    <select id="getWarnTypeCount" resultType="java.lang.Long">
+    	  select count(t.counts) from
+      (select  count(*) counts  from robot_operation_monitor_detail
+        where report_time=#{today}  GROUP BY client_name,client_Id,machine_code,warn_type) t
+    </select>
+    <select id="getWarnNumber" resultType="java.lang.Long">
+       select count(*)  from robot_operation_monitor_detail
+				where report_time=#{today}
+    </select>
+</mapper>

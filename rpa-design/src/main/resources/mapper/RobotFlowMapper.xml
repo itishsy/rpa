@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotFlowDao">
+    <resultMap id="FlowScheduleMap" type="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        <id column="id" property="id" />
+        <result property="customerName" column="customer_name" />
+        <result property="flowName" column="flow_name" />
+        <result property="execOrder" column="exec_order" />
+        <association property="robotAppSchedule" javaType="com.seebon.rpa.entity.robot.RobotAppSchedule">
+            <result property="flowCode" column="flow_code" />
+            <result property="id" column="scheduleId" />
+            <result property="schedule" column="schedule" />
+            <result property="editId" column="edit_id" />
+            <result property="execCycle" column="exec_cycle" />
+            <result property="execAreaTime" column="exec_area_time" />
+            <result property="execStyle" column="exec_style" />
+            <result property="taskType" column="task_type" />
+            <result property="editTime" column="edit_time" />
+            <result property="generalPlanId" column="general_plan_id" />
+        </association>
+    </resultMap>
+
+    <resultMap id="ShowVo" type="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        <id column="id" property="id" />
+        <result property="flowCode" column="flow_code" />
+        <result property="appCode" column="app_code" />
+        <result property="flowName" column="flow_name" />
+        <result property="appNameAndFlowName" column="appNameAndFlowName" />
+    </resultMap>
+
+    <!--关联新增选择流程名称-->
+    <select id="showRobotFlow" resultMap="ShowVo">
+        SELECT
+            rf.id,
+            rf.app_code,
+            rf.flow_code,
+            CONCAT( ra.app_name, '-', rf.flow_name ) AS appNameAndFlowName
+        FROM
+	        robot_flow rf
+	    LEFT JOIN robot_app ra ON rf.app_code = ra.app_code
+        where rf.app_code is not null
+    </select>
+    <!--修改执行顺序-->
+    <update id="updateExecOrder">
+        UPDATE robot_flow
+        SET exec_order=(exec_order - 1)
+        WHERE app_code = #{appCode}
+          AND exec_order > #{execOrder}
+    </update>
+    <!--appcode下的配置状态更新-->
+    <update id="updateFlowStatus">
+        UPDATE robot_flow rf,robot_app ra
+        SET rf.status=1
+        WHERE ra.app_code=rf.app_code
+          AND ra.app_code = #{appCode}
+    </update>
+    <!--查询机器人流程列表-->
+    <select id="flowList" resultType="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        SELECT
+               rf.exec_order,
+               rf.id,
+               rf.add_type,
+               rf.flow_name,
+               rf.create_time,
+               rf.update_time,
+               rf.app_code,
+               rf.flow_type,
+               rf.flow_code,
+               rf.tag_code,
+               rf.service_item,
+               rf.comment,
+               rf.declare_system,
+               rf.run_support,
+               rf.`status`,
+               case rf.`status` when 0 then '配置' when 1 then '调试通过' when 2 then '等待数据' when 3 then '验证有效'
+               when 4 then '修复问题'  else '' end as statusName,
+               case rf.service_item when 1 then '增员' when 2 then '减员' when 3 then '调基' when 5 then '补缴'
+                when 6 then '缴费' when 7 then '在册名单' when 8 then '费用明细' when 9 then '政策通知' when 10 then '基数申报' else '' end as serviceItemName,
+               rsu.dict_name runSupportName,
+               rt.template_flow_code,
+	           temp.flow_name template_flow_name,
+               dic.dict_name tag_name,
+               step.stepNum
+        FROM
+            robot_flow rf
+        LEFT JOIN robot_flow_template rt ON rt.flow_code = rf.flow_code
+	    LEFT JOIN robot_flow temp ON temp.flow_code = rt.template_flow_code
+	    LEFT JOIN robot_data_dict dic ON dic.dict_code = rf.tag_code
+	    LEFT JOIN robot_data_dict rsu ON rsu.dict_code = rf.run_support
+        LEFT JOIN ( SELECT count( 1 ) stepNum, st.flow_code FROM robot_flow_step st GROUP BY st.flow_code ) step ON step.flow_code = rf.flow_code
+        WHERE rf.app_code = #{appCode}
+        <if test='flowType!=null and flowType!=""'>
+            and rf.flow_type = #{flowType}
+        </if>
+        <if test='serviceItem!=null and serviceItem!=""'>
+            and rf.service_item = #{serviceItem}
+        </if>
+        <if test='declareSystem!=null and declareSystem!=""'>
+            and rf.declare_system = #{declareSystem}
+        </if>
+        <if test='runSupport!=null and runSupport!=""'>
+            and rf.run_support = #{runSupport}
+        </if>
+        <if test="declareSystemList!=null and declareSystemList.size>0">
+            and rf.declare_system in
+            <foreach collection="declareSystemList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="serviceItemList!=null and serviceItemList.size>0">
+            and rf.service_item in
+            <foreach collection="serviceItemList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="flowTypeList!=null and flowTypeList.size>0">
+            and rf.flow_type in
+            <foreach collection="flowTypeList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <!--查询机器人流程列表-->
+    <select id="totalStatus" resultType="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        SELECT
+            rf.`status`,
+            count(1) statusNum
+        FROM
+            robot_flow rf
+        WHERE rf.app_code = #{appCode}
+        <if test="serviceItemList!=null and serviceItemList.size>0">
+            and rf.service_item in
+            <foreach collection="serviceItemList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="flowTypeList!=null and flowTypeList.size>0">
+            and rf.flow_type in
+            <foreach collection="flowTypeList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        group by rf.`status`
+    </select>
+
+    <select id="getByFlowCode" resultType="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        SELECT
+           rf.id,
+           rf.app_code,
+           rf.flow_code,
+           rf.flow_name,
+           rf.relation_flow_code,
+           rf.flow_type,
+           rf.exec_order,
+           rf.add_type,
+           rf.open_type,
+           rf.template_type,
+           rt.template_flow_code,
+           temp.flow_name template_flow_name,
+           app.app_name appName
+        FROM
+            robot_flow rf
+        LEFT JOIN robot_flow_template rt ON rt.flow_code = rf.flow_code
+	    LEFT JOIN robot_flow temp ON temp.flow_code = rt.template_flow_code
+        LEFT JOIN robot_app app ON app.app_code = rf.app_code
+        WHERE rf.flow_code = #{flowCode}
+    </select>
+
+    <select id="findByFlowCode" resultType="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        SELECT
+            rf.id,
+            rf.app_code,
+            rf.flow_code,
+            rf.flow_name,
+            rf.relation_flow_code,
+            rf.flow_type,
+            rf.exec_order,
+            rf.add_type,
+            rf.open_type,
+            rf.template_type,
+            app.app_name appName
+        FROM
+            robot_flow rf
+        LEFT JOIN robot_app app ON app.app_code = rf.app_code
+        WHERE rf.flow_code = #{flowCode}
+    </select>
+
+    <!--查询机器人流程列表-->
+    <select id="listTemplate" resultType="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        SELECT
+               rf.exec_order,
+               rf.id,
+               rf.add_type,
+               rf.flow_name,
+               rf.create_time,
+               rf.app_code,
+               rf.flow_type,
+               rf.flow_code
+        FROM
+            robot_flow rf
+        WHERE
+            rf.template_type = #{templateType}
+        <if test='flowType!=null and flowType!=""'>
+            and rf.flow_type = #{flowType}
+        </if>
+    </select>
+
+    <select id="selectScheduleFlow" resultType="com.seebon.rpa.entity.robot.dto.design.RobotFlowVO">
+        SELECT rf.exec_order,
+               rf.id,
+               rf.add_type,
+               rf.flow_name,
+               rf.create_time,
+               rf.app_code,
+               rf.flow_type,
+               rf.flow_code
+        FROM robot_flow rf
+        WHERE rf.app_code = #{appCode} and rf.flow_type = 1
+    </select>
+
+    <update id="updateRelationFlow" parameterType="string">
+        update robot_flow set relation_flow_code = null where relation_flow_code = #{flowCode}
+    </update>
+
+    <!--流程计划-->
+    <select id="selectFlowSchedule" resultMap="FlowScheduleMap">
+        select ras.exec_order,rf.flow_name,rf.flow_code,ras.id as scheduleId,ras.edit_time,ras.exec_cycle,ras.exec_area_time,ras.exec_style,
+        ras.edit_id,ras.task_type,ras.general_plan_id
+        from robot_flow rf right join robot_app_schedule ras
+        on rf.flow_code = ras.flow_code
+        where
+        rf.APP_CODE = #{appCode} and rf.flow_type = 1
+        order by
+        ras.exec_order
+    </select>
+
+    <select id="selectScheduleCountByFlowCode" resultType="integer" parameterType="java.util.List">
+        select count(*) from robot_app_schedule where flow_code in
+        <foreach collection="flowCodes" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectTaskScheduleCountByFlowCode" resultType="integer" parameterType="java.util.List">
+        select count(*) from robot_task_schedule where task_code = #{taskCode} and flow_code in
+        <foreach collection="flowCodes" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectMainFlowListByAppCode" resultType="com.seebon.rpa.entity.robot.RobotFlow">
+        select * from robot_flow where app_code = #{appCode}
+		and flow_type = 1
+    </select>
+
+    <update id="updateSchedule" parameterType="com.seebon.rpa.entity.robot.RobotAppSchedule">
+        update robot_app_schedule set edit_id = #{editId},exec_cycle = #{execCycle},exec_area_time = #{execAreaTime},
+        exec_style = #{execStyle},task_type = #{taskType},edit_time = #{editTime},general_plan_id = #{generalPlanId}
+        where flow_code = #{flowCode}
+    </update>
+
+    <!--任务执行计划-->
+    <select id="selectTaskSchedule" resultMap="FlowScheduleMap">
+        SELECT
+            ras.exec_order,
+            rf.flow_name,
+            rf.flow_code,
+            ras.id AS scheduleId,
+            ras.edit_time,
+            ras.exec_cycle,
+            ras.exec_area_time,
+            ras.exec_style,
+            rc.customer_name,
+            ras.task_type,
+            ras.general_plan_id
+        FROM
+            robot_flow rf
+        RIGHT JOIN robot_task_schedule ras ON rf.flow_code = ras.flow_code and ras.task_code = #{taskCode}
+        LEFT JOIN robot_customer rc ON ras.edit_id = rc.id
+        WHERE
+            rf.app_code = #{appCode}
+        and rf.flow_type = 1
+        ORDER BY
+            ras.exec_order
+    </select>
+    <select id="getLoginFlow" resultType="com.seebon.rpa.entity.robot.dto.RobotTaskServiceItemDTO">
+        select '登录' as serviceItemName,1 as status,group_concat(a.flow_code) as flows from robot_flow a
+        where a.app_code=#{appCode} and a.tag_code='10018008' group by a.tag_code
+    </select>
+    <select id="getServiceItemList" resultType="com.seebon.rpa.entity.robot.RobotFlow">
+        select *from robot_flow  where flow_type=1 and service_item is not null and app_code=#{appCode}
+        GROUP BY service_item
+    </select>
+
+    <!--应用公共计划-->
+    <select id="findAppFlows" parameterType="String" resultType="com.seebon.rpa.entity.robot.vo.RobotFlowVO">
+        SELECT
+            f.app_code AS appCode,
+            f.flow_code AS flowCode,
+            f.flow_name AS flowName,
+            f.flow_type AS flowType,
+            f.service_item AS serviceItem,
+            f.run_support AS runSupport,
+            f.declare_system AS declareSystem,
+            f.tag_code AS tagCode,
+            ras.task_type AS taskType,
+            ras.exec_order AS execOrder,
+            rt.template_flow_code AS templateFlowCode,
+            case when ras.task_type is null or ras.task_type=1 then pl.exec_cycle else ras.exec_cycle end as execCycle,
+            case when ras.task_type is null or ras.task_type=1 then pl.exec_area_time else ras.exec_area_time end as execAreaTime,
+            case when ras.task_type is null or ras.task_type=1 then pl.exec_style else ras.exec_style end as execStyle
+        FROM
+            robot_flow f
+        <if test="flowCodes != null and flowCodes.size != 0">
+            LEFT JOIN robot_app_schedule ras ON f.flow_code = ras.flow_code
+        </if>
+        <if test="flowCodes == null or flowCodes.size == 0">
+            JOIN robot_app_schedule ras ON f.flow_code = ras.flow_code
+        </if>
+        JOIN robot_task t ON t.app_code = f.app_code
+        LEFT JOIN robot_app_general_plan pl on pl.app_code =  f.app_code
+        LEFT JOIN robot_flow_template rt ON rt.flow_code = f.flow_code
+        WHERE
+            1=1
+        and t.task_code = #{taskCode}
+        and f.flow_type = 1
+        and f.declare_system is not null
+        <if test="flowCodes != null and flowCodes.size != 0">
+            and f.flow_code in
+            <foreach collection="flowCodes" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="flowCodes == null or flowCodes.size == 0">
+            and f.service_item is not null
+            and ras.exec_order is not null
+        </if>
+        ORDER BY
+            ras.exec_order asc
+    </select>
+
+    <!--流程私有计划-->
+    <select id="findTaskFlows" parameterType="String" resultType="com.seebon.rpa.entity.robot.vo.RobotFlowVO">
+        SELECT
+            f.app_code AS appCode,
+            f.flow_code AS flowCode,
+            f.flow_name AS flowName,
+            f.flow_type AS flowType,
+            f.service_item AS serviceItem,
+            f.run_support AS runSupport,
+            f.declare_system AS declareSystem,
+            f.tag_code AS tagCode,
+            ras.task_type AS taskType,
+            ras.status AS scheduleStatus,
+            rt.template_flow_code AS templateFlowCode,
+            case when ras.task_type is null or ras.task_type=1 then pl.exec_cycle else ras.exec_cycle end as execCycle,
+            case when ras.task_type is null or ras.task_type=1 then pl.exec_area_time else ras.exec_area_time end as execAreaTime,
+            case when ras.task_type is null or ras.task_type=1 then pl.exec_style else ras.exec_style end as execStyle
+        FROM
+            robot_flow f
+        JOIN robot_task t ON t.app_code = f.app_code
+        JOIN robot_task_schedule ras ON f.flow_code = ras.flow_code and ras.task_code = t.task_code
+        LEFT JOIN robot_app_general_plan pl on pl.app_code =  f.app_code
+        LEFT JOIN robot_flow_template rt ON rt.flow_code = f.flow_code
+        WHERE
+            1=1
+        and t.task_code = #{taskCode}
+        and f.flow_type = 1
+        and f.declare_system is not null
+        <if test="flowCodes != null and flowCodes.size != 0">
+            and f.flow_code in
+            <foreach collection="flowCodes" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="flowCodes == null or flowCodes.size == 0">
+            and f.service_item is not null
+        </if>
+        ORDER BY
+            ras.exec_order asc
+    </select>
+
+    <select id="findFlows" parameterType="String" resultType="com.seebon.rpa.entity.robot.vo.RobotFlowVO">
+        SELECT
+            f.app_code AS appCode,
+            f.flow_code AS flowCode,
+            f.flow_name AS flowName,
+            f.flow_type AS flowType,
+            f.tag_code AS tagCode,
+            f.service_item AS serviceItem,
+            f.run_support AS runSupport,
+            f.declare_system AS declareSystem,
+            rt.template_flow_code AS templateFlowCode,
+            app.app_name appName
+        FROM
+            robot_flow f
+        LEFT JOIN robot_task t ON t.app_code = f.app_code
+        LEFT JOIN robot_flow_template rt ON rt.flow_code = f.flow_code
+        LEFT JOIN robot_app app ON app.app_code = f.app_code
+        LEFT JOIN robot_app_schedule ras ON f.flow_code = ras.flow_code
+        WHERE
+        1=1
+        AND f.flow_type = 1
+        AND t.task_code = #{taskCode}
+        AND f.declare_system = #{declareSystem}
+        <if test='tagCode!=null and tagCode!=""'>
+            and f.tag_code=#{tagCode}
+        </if>
+        <if test="serviceItemList != null and serviceItemList.size != 0">
+            and f.service_item in
+            <foreach collection="serviceItemList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY
+            ras.exec_order asc
+    </select>
+</mapper>

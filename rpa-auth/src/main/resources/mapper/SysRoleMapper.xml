@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.SysRoleDao">
+
+    <select id="findAll" resultType="com.seebon.rpa.entity.auth.po.SysRole">
+        SELECT
+          `id`,
+          `name`,
+          `code`,
+          `common`
+        FROM
+          `sys_role`;
+    </select>
+
+    <select id="findByUser" resultType="com.seebon.rpa.entity.auth.po.SysRole">
+        SELECT
+          r.`id`,
+          r.`name`,
+          r.`code`,
+          r.`common`
+        FROM `sys_user` u
+            JOIN `sys_user_role` ur ON u.`id` = ur.`user_id`
+            JOIN `sys_role` r ON r.`id` = ur.`role_id`
+        WHERE u.`username` = #{username};
+    </select>
+
+    <select id="findCodeByUser" resultType="java.lang.String">
+        SELECT
+          r.`code`
+        FROM `sys_user` u
+            JOIN `sys_user_role` ur ON u.`id` = ur.`user_id`
+            JOIN `sys_role` r ON r.`id` = ur.`role_id`
+        WHERE u.`username` = #{username} and r.status=1;
+    </select>
+    <select id="getRolesByCustId" resultType="com.seebon.rpa.entity.auth.po.SysRole">
+        select sr.id,sr.name from sys_user su
+        left join sys_user_role sur on su.id=sur.user_id
+        left join sys_role sr on sur.role_id=sr.id
+        where su.cust_id=#{custId} and su.`status`=1 and sr.id is not null
+    </select>
+    <select id="getCustIdsByRoleName" resultType="java.lang.Integer">
+        select distinct su.cust_id from sys_user su
+        left join sys_user_role sur on su.id=sur.user_id
+        left join sys_role sr on sur.role_id=sr.id
+        where sr.name like '%${roleName}%' and su.`status`=1
+    </select>
+</mapper>

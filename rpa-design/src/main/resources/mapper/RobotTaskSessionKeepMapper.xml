@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotTaskSessionKeepDao">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.vo.RobotTaskSessionKeepVO">
+        <id property="id" column="id"/>
+        <result property="clientId" column="client_id"/>
+        <result property="machineCode" column="machine_code"/>
+        <result property="appCode" column="app_code"/>
+        <result property="taskCode" column="task_code"/>
+        <result property="declareSystem" column="declare_system"/>
+        <result property="comment" column="comment"/>
+        <result property="port" column="port"/>
+        <result property="sharePort" column="share_port"/>
+        <result property="status" column="status"/>
+        <result property="loginStatus" column="login_status"/>
+        <result property="url" column="url"/>
+        <result property="xpath" column="xpath"/>
+        <result property="loseXpath" column="lose_xpath"/>
+        <result property="retryNum" column="retry_num"/>
+        <result property="matchExpress" column="match_express"/>
+        <result property="fileId" column="file_id"/>
+        <result property="sync" column="sync"/>
+        <result property="syncMachineCode" column="sync_machine_code"/>
+        <result property="maxKeepTime" column="max_keep_time"/>
+        <result property="syncTime" column="sync_time"/>
+        <result property="startKeepTime" column="start_keep_time"/>
+        <result property="endKeepTime" column="end_keep_time"/>
+        <result property="disabled" column="disabled"/>
+        <result property="createId" column="create_id"/>
+        <result property="createName" column="create_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="appName" column="app_name"/>
+        <result property="orgName" column="orgName"/>
+        <result property="accountNumber" column="accountNumber"/>
+        <result property="accountAndOrgName" column="accountAndOrgName"/>
+        <result property="taskName" column="taskName"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ke.id, ke.client_id, ke.machine_code, ke.app_code, ke.task_code, ke.declare_system,ke.comment,ke.port,ke.share_port,ke.status,ke.login_status,ke.url,ke.xpath,ke.lose_xpath,
+        ke.retry_num,ke.match_express,ke.file_id,ke.sync,ke.sync_machine_code,ke.sync_time,ke.max_keep_time,ke.start_keep_time,ke.end_keep_time,ke.disabled,ke.create_time,ke.create_id,
+        ke.create_name,ke.update_time
+    </sql>
+
+    <select id="selectByParams" resultMap="BaseResultMap">
+        SELECT
+             <include refid="Base_Column_List"/>,
+            ra.app_name,
+            if(case when ra.app_args like '%1001001%'  then CONCAT((select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='companyName'),'-',
+            (select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='socialNumber'))
+            when ra.app_args like '%1001002%' then CONCAT((select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='companyName'),'-',
+            (select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='accfundNumber')) else '' end='-', '',
+            case when ra.app_args like '%1001001%'  then CONCAT((select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='companyName'),'-',
+            (select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='socialNumber'))
+            when ra.app_args like '%1001002%' then CONCAT((select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='companyName'),'-',
+            (select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='accfundNumber')) else '' end) as accountAndOrgName,
+            case when ra.app_args like '%1001001%'  then (select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='socialNumber')
+            when ra.app_args like '%1001002%' then (select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='accfundNumber') else '' end as accountNumber,
+            (select args_value from robot_task_args rta where rta.task_code=ta.task_code and args_key='companyName') as orgName
+        FROM
+            robot_task_session_keep ke
+        LEFT JOIN robot_app ra ON ra.app_code = ke.app_code
+        LEFT JOIN robot_task ta ON ta.task_code = ke.task_code
+        <where>
+            <if test="id != null">
+                and ke.id = #{id}
+            </if>
+            <if test="clientId != null and clientId != ''">
+                and ke.client_id = #{clientId}
+            </if>
+            <if test="machineCode != null and machineCode != ''">
+                and ke.machine_code = #{machineCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and (ra.app_name like concat('%',#{keyword},'%'))
+            </if>
+            <if test="status != null and status != ''">
+                and ke.status = #{status}
+            </if>
+            <if test="declareSystem != null and declareSystem !=''">
+                and ke.declare_system = #{declareSystem}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectTask" resultMap="BaseResultMap">
+        SELECT temp.* from (
+            SELECT
+            rt.app_code,
+            rt.machine_code,
+            rt.task_code,
+            rt.task_name,
+            CASE
+            WHEN ra.app_args LIKE '%1001001%' THEN
+            ( SELECT args_value FROM robot_task_args rta WHERE rta.task_code = rt.task_code AND rta.args_key = 'socialNumber' )
+            WHEN ra.app_args LIKE '%1001002%' THEN
+            ( SELECT args_value FROM robot_task_args rta WHERE rta.task_code = rt.task_code AND rta.args_key = 'accfundNumber' ) ELSE ''
+            END AS accountNumber,
+            ( SELECT args_value FROM robot_task_args rta WHERE rta.task_code = rt.task_code AND rta.args_key = 'companyName' ) AS orgName
+        FROM
+            robot_client_app ca
+        LEFT JOIN robot_task rt ON rt.app_code = ca.app_code AND rt.client_id = ca.client_id AND rt.machine_code = ca.machine_code
+        LEFT JOIN robot_app ra ON rt.app_code = ra.app_code
+        <where>
+            <if test="clientId != null">
+                and rt.client_id = #{clientId}
+            </if>
+            <if test="appCode != null and appCode !=''">
+                and rt.app_code = #{appCode}
+            </if>
+        </where>
+        ) temp
+        where temp.accountNumber is not null
+    </select>
+
+    <select id="selectByClientId" resultMap="BaseResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_task_session_keep ke
+        where
+            ke.client_id = #{clientId}
+        and (ke.sync_machine_code IS NULL or ke.sync_machine_code not like concat('%',#{machineCode},'%'))
+    </select>
+
+    <select id="selectMinPort" resultType="integer">
+        SELECT MAX(`port`) FROM robot_task_session_keep where client_id = #{clientId}
+    </select>
+
+    <update id="updateById" parameterType="com.seebon.rpa.entity.robot.RobotTaskSessionKeep">
+        update robot_task_session_keep set machine_code=#{machineCode},status=#{status},file_id=#{fileId},start_keep_time = #{startKeepTime},
+        end_keep_time = #{endKeepTime},comment = #{comment},update_time = now() where id = #{id}
+    </update>
+
+    <update id="updateBySharePort" parameterType="com.seebon.rpa.entity.robot.RobotTaskSessionKeep">
+        update robot_task_session_keep set machine_code=#{machineCode},status=#{status},file_id=#{fileId},start_keep_time = #{startKeepTime},
+        end_keep_time = #{endKeepTime},comment = #{comment},update_time = now() where share_port = #{sharePort}
+    </update>
+
+    <update id="againSync" parameterType="integer">
+        update robot_task_session_keep set sync_machine_code=null,sync_time=null,update_time = now() where 1=1
+        <if test="id != null">
+            and id = #{id}
+        </if>
+    </update>
+</mapper>

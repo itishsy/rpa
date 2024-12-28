@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotClientPriorityMapper">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotClientPriority">
+        <result column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="app_code" property="appCode"/>
+        <result column="app_name" property="appName"/>
+        <result column="sync_machine_code" property="syncMachineCode"/>
+        <result column="sync_time" property="syncTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        rc.id, rc.client_id, rc.app_code, rc.app_name, rc.sync_machine_code, rc.sync_time, rc.create_time, rc.update_time
+    </sql>
+
+    <select id="selectByTaskCode" resultMap="BaseResultMap">
+        SELECT DISTINCT
+            rc.app_code,
+            rc.app_name
+        FROM
+            robot_client_priority rc
+        LEFT JOIN robot_task ta ON ta.app_code = rc.app_code
+        WHERE
+            ta.task_code = #{taskCode} limit 1
+    </select>
+
+    <delete id="clean">
+        delete from robot_client_priority
+    </delete>
+</mapper>

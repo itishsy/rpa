@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotFlowStepArgsMapper">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotFlowStepArgs">
+        <id column="id" property="id"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="group_code" property="groupCode"/>
+        <result column="step_code" property="stepCode"/>
+        <result column="target_args" property="targetArgs"/>
+        <result column="action_args" property="actionArgs"/>
+    </resultMap>
+
+    <select id="selectByFlowCode" resultMap="BaseResultMap">
+        SELECT * FROM robot_flow_step_args WHERE flow_code = #{flowCode} and group_code = #{groupCode} and step_code = #{stepCode}
+    </select>
+
+    <select id="selectAllByFlowCode" resultMap="BaseResultMap">
+        SELECT * FROM robot_flow_step_args WHERE flow_code = #{flowCode}
+    </select>
+
+    <delete id="deleteByFlowCode">
+        delete from robot_flow_step_args where flow_code = #{flowCode};
+    </delete>
+
+</mapper>

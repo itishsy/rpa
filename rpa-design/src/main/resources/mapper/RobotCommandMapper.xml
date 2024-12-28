@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotCommandDao">
+
+    <select id="getRobotCommandExeList" resultType="com.seebon.rpa.entity.robot.vo.RobotCommandVO">
+        select rc.id,
+        rc.`status`,
+        (select rta.args_value from robot_task_args rta where rta.task_code=rc.task_code and rta.args_key='companyName') as orgName,
+        case when ra.app_args like '%1001001%'  then (select args_value from robot_task_args rta where rta.task_code=rc.task_code and args_key='socialNumber')
+                when ra.app_args like '%1001002%' then (select args_value from robot_task_args rta where rta.task_code=rc.task_code and args_key='accfundNumber') else ''
+                end as accountNumber
+         from robot_command rc
+        left join robot_app ra on rc.app_code=ra.app_code
+         where rc.client_id=#{clientId} and rc.`status`!=0 and rc.tip_status=0
+         order by rc.status limit 5
+    </select>
+
+    <update id="updateByUuid">
+        update robot_command set status=#{status},tip_status=#{tipStatus},update_time=now() where uuid=#{uuid}
+    </update>
+</mapper>

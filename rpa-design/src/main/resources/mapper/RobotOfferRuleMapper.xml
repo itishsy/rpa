@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotOfferRuleDao">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.vo.RobotOfferRuleVO">
+        <id column="id" property="id"/>
+        <result column="addr_id" property="addrId"/>
+        <result column="addr_name" property="addrName"/>
+        <result column="business_type" property="businessType"/>
+        <result column="declare_type" property="declareType"/>
+        <result column="declare_website" property="declareWebsite"/>
+        <result column="current_node" property="currentNode"/>
+        <result column="status" property="status"/>
+        <result column="create_id" property="createId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_id" property="updateId"/>
+        <result column="update_time" property="updateTime"/>
+        <collection property="ruleItemList" ofType="com.seebon.rpa.entity.robot.RobotOfferRuleItem">
+            <id column="item.id" property="id"/>
+            <result column="item.declare_status" property="declareStatus"/>
+            <result column="item.match_rule" property="matchRule"/>
+            <result column="item.content" property="content"/>
+            <result column="item.replace_type" property="replaceType"/>
+            <result column="item.replace_content" property="replaceContent"/>
+            <result column="item.next_node" property="nextNode"/>
+            <result column="item.status" property="status"/>
+            <result column="item.remark" property="remark"/>
+        </collection>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        a.id,a.addr_id,a.addr_name,a.business_type,a.declare_type,a.declare_website,a.current_node,a.status
+    </sql>
+
+    <select id="selectByParams" resultMap="BaseResultMap">
+        SELECT
+            a.*,
+            item.id as 'item.id',
+            item.declare_status as 'item.declare_status',
+            item.match_rule as 'item.match_rule',
+            item.content as 'item.content',
+            item.replace_type as 'item.replace_type',
+            item.replace_content as 'item.replace_content',
+            item.next_node as 'item.next_node',
+            item.status as 'item.status',
+            item.remark as 'item.remark'
+        from (
+            SELECT
+               <include refid="Base_Column_List"/>
+            FROM
+                robot_offer_rule a
+            where
+                1=1
+            <include refid="whereByParams"/>
+            <if test="start!=null and size!=null">
+                limit ${start},${size}
+            </if>
+        ) a
+        LEFT JOIN robot_offer_rule_item item ON item.rule_id = a.id AND item.deleted = 0
+        where
+        1=1
+        <if test="keyword != null and keyword != ''">
+            and item.content like concat('%',#{keyword},'%')
+        </if>
+        <if test="nextNode != null and nextNode != ''">
+            and item.next_node = #{nextNode}
+        </if>
+        <if test='ruleType != null and ruleType == "checkStatus"'>
+            and item.next_node is null
+        </if>
+        <include refid="whereByParams"/>
+    </select>
+
+    <select id="countByParams" resultType="int">
+        select count(1) from (
+        SELECT
+        count(1)
+        FROM
+        robot_offer_rule a
+        LEFT JOIN robot_offer_rule_item item ON item.rule_id = a.id AND item.deleted = 0
+        where
+            1=1
+        <if test="keyword != null and keyword != ''">
+            and item.content like concat('%',#{keyword},'%')
+        </if>
+        <if test="nextNode != null and nextNode != ''">
+            and item.next_node = #{nextNode}
+        </if>
+        <if test='ruleType != null and ruleType == "checkStatus"'>
+            and item.next_node is null
+        </if>
+        <include refid="whereByParams"/>
+        group by a.id
+        ) temp
+    </select>
+
+    <sql id="whereByParams">
+        <if test="id != null and id != ''">
+            and a.id=#{id}
+        </if>
+        <if test="addrId != null and addrId != ''">
+            and a.addr_id=#{addrId}
+        </if>
+        <if test="status != null">
+            and a.status=#{status}
+        </if>
+        <if test="addrName != null and addrName != ''">
+            and a.addr_name=#{addrName}
+        </if>
+        <if test="declareWebsite != null and declareWebsite != ''">
+            and a.declare_website=#{declareWebsite}
+        </if>
+        <if test="businessType != null and businessType.size != 0">
+            and a.business_type in
+            <foreach collection="businessType" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="declareType != null and declareType.size> 0">
+            and a.declare_type in
+            <foreach collection="declareType" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </sql>
+</mapper>

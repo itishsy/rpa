@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotClientDao">
+    <resultMap id="robotClient" type="com.seebon.rpa.entity.robot.RobotClient">
+        <id column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="machine_name" property="machineName"/>
+        <result column="machine_factory" property="machineFactory"/>
+        <result column="machine_amount" property="machineAmount"/>
+        <result column="token" property="token"/>
+        <result column="ip" property="ip"/>
+        <result column="port" property="port"/>
+        <result column="work_path" property="workPath"/>
+        <result column="status" property="status"/>
+        <result column="cmd" property="cmd"/>
+        <result column="msg" property="msg"/>
+        <result column="user_name" property="userName"/>
+        <result column="type" property="type"/>
+        <result column="remark" property="remark"/>
+        <result column="login_time" property="loginTime"/>
+        <result column="heartbeat_time" property="heartbeatTime"/>
+        <result column="last_maintenance_date" property="lastMaintenanceDate"/>
+        <result column="create_time" property="createTime"/>
+        <result column="max_keep_num" property="maxKeepNum"/>
+        <result column="sync" property="sync"/>
+    </resultMap>
+
+    <resultMap id="ClientLogVO" type="com.seebon.rpa.entity.robot.vo.RobotClientVO" extends="robotClient">
+        <collection property="logList" ofType="com.seebon.rpa.entity.robot.RobotClientLog"
+                    select="selectClientLogByMachineCode" column="machine_code">
+
+        </collection>
+
+    </resultMap>
+
+    <resultMap id="ClientVO" type="com.seebon.rpa.entity.robot.vo.RobotClientVO">
+        <id column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="ip" property="ip"/>
+        <result column="port" property="port"/>
+        <result column="work_path" property="workPath"/>
+        <result column="type" property="type"/>
+        <result column="create_time" property="createTime"/>
+        <result column="login_time" property="loginTime"/>
+        <result column="heartbeat_time" property="heartbeatTime"/>
+        <result column="status" property="status"/>
+        <collection property="robotClientApps" ofType="com.seebon.rpa.entity.robot.RobotClientApp">
+            <result property="clientId" column="client_id" />
+            <result property="appCode" column="app_code" />
+            <result property="status" column="status" />
+            <result property="appName" column="app_name" />
+            <result property="version" column="version" />
+            <result property="id" column="clientAppId" />
+            <result property="createTime" column="create_time" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="RobotClientVOMap" type="com.seebon.rpa.entity.robot.vo.RobotClientVO" extends="robotClient">
+        <collection property="robotClientApps" ofType="com.seebon.rpa.entity.robot.RobotClientApp"
+        select="selectRobotClientAppByClientId"
+        column="{clientId=client_id}">
+        </collection>
+    </resultMap>
+    <resultMap id="RobotClientAppMap" type="com.seebon.rpa.entity.robot.RobotClientApp">
+        <result property="clientId" column="client_id" />
+        <result property="appCode" column="app_code" />
+        <result property="appName" column="app_name" />
+    </resultMap>
+
+    <resultMap id="componentVO" type="com.seebon.rpa.entity.robot.dto.design.RobotClientComponentVO">
+        <result column="component" property="component"/>
+        <result column="clientVersion" property="version"/>
+        <result column="newVersion" property="newVersion"/>
+    </resultMap>
+
+    <resultMap id="appVO" type="com.seebon.rpa.entity.robot.dto.design.RobotClientFlowVO">
+        <result column="flow_name" property="flowName"/>
+        <result column="clientVersion" property="version"/>
+        <result column="newVersion" property="newVersion"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+    id, client_id, machine_code, machine_name,max_keep_num,sync, machine_factory,machine_amount, token, ip, port, work_path, status, cmd, msg, user_name,type,remark, login_time, heartbeat_time,
+    last_maintenance_date, create_time
+   </sql>
+
+    <select id="selectClientByClientId" resultMap="ClientVO">
+        SELECT
+            rc.id,
+            rc.ip,
+            rc.client_id,
+            rc.PORT,
+            rc.type,
+            rca.id AS clientAppId,
+            rca.app_code,
+            rca.app_name,
+            rca.version,
+            rca.STATUS,
+            rca.create_time
+        FROM
+            robot_client rc
+	    LEFT JOIN robot_client_app rca ON rc.client_id = rca.client_id
+	    where rc.client_id = #{clientId}
+    </select>
+
+    <select id="selectRobotClients" resultMap="RobotClientVOMap">
+        select
+            <include refid="Base_Column_List"/>
+         from robot_client
+        <where>
+            <if test="clientId != null and clientId != ''">
+                and client_id = #{clientId}
+            </if>
+            <if test="status != null and status.size != 0">
+                and status in
+                <foreach collection="status" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="machineName != null and machineName != ''">
+                and machine_name like concat('%',#{machineName},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectRobotClientAppByClientId" resultMap="RobotClientAppMap">
+        select rca.app_name from robot_client_app rca
+        where client_id = #{clientId}
+    </select>
+
+    <select id="selectClient" resultMap="robotClient">
+        SELECT *
+        FROM robot_client
+        WHERE machine_code = #{machineCode}
+    </select>
+    <update id="updateByRobotCode" parameterType="com.seebon.rpa.entity.robot.RobotClient">
+        UPDATE robot_client
+        SET `id`=#{id},
+            client_id=#{clientId},
+            robot_code=#{robotCode},
+            os_bit=#{osBit},
+            `ip`=#{ip},
+            `port`=#{port},
+            work_path=#{workPath},
+            create_time=#{createTime},
+            login_time=#{loginTime},
+            heartbeat_time=#{heartbeatTime},
+            `status`=#{status}
+        WHERE robot_code = #{robotCode}
+          AND `status` = 1
+    </update>
+
+    <update id="updateStatus">
+        UPDATE robot_client
+        SET `status`=#{status}
+        WHERE machine_code = #{machineCode}
+    </update>
+
+    <update id="updateStatusRobotCode" parameterType="String">
+        UPDATE robot_client
+        SET `status`=0
+        WHERE robot_code = #{robotCode}
+          AND `status` = 1
+    </update>
+
+    <!-- 分页查询控制台监控列表 -->
+    <select id="findByIgQuery" resultMap="robotClient">
+        SELECT * FROM robot_client WHERE `status`IN(0,1)
+        <!-- <include refid="filter"/>-->
+        ORDER BY create_time ASC
+        <if test="start != null and size != null">
+            limit #{start},#{size}
+        </if>
+    </select>
+
+    <!-- 查询总记录数 -->
+    <select id="findByRecords" resultType="int">
+        SELECT COUNT(1) FROM robot_client WHERE `status`IN(0,1)
+        <!--<include refid="filter"/>-->
+    </select>
+
+    <!--component列表-->
+    <select id="componentList" resultMap="componentVO">
+        SELECT rcc.component, rcc.version AS clientVersion, rcm.version AS newVersion
+        FROM robot_client_component AS rcc
+                 LEFT JOIN robot_component AS rcm ON rcc.component = rcm.component
+                 LEFT JOIN robot_client AS rc
+                           ON rc.robot_code = rcc.robot_code AND rc.status = 1 AND rc.robot_code = #{robotCode}
+    </select>
+    <!--RPA流程列表-->
+    <select id="appList" resultMap="appVO">
+        SELECT rf.flow_name, rca.version AS clientVersion, ra.version AS newVersion
+        FROM robot_client_app AS rca
+                 LEFT JOIN robot_flow AS rf ON rca.app_code = rf.app_code
+                 LEFT JOIN robot_app AS ra ON rca.app_code = ra.app_code
+                 LEFT JOIN robot_client AS rc ON rc.client_id = rca.client_id AND rc.status = 1
+        WHERE rc.robot_code = #{robotCode}
+    </select>
+    <!--所有在线机器人-->
+    <select id="selectAllClient" resultMap="robotClient">
+        SELECT *
+        FROM robot_client
+        WHERE `status` = 1
+    </select>
+    <select id="selectTimeDifference" resultType="java.lang.Integer">
+        SELECT TIMESTAMPDIFF
+                   (MINUTE,(SELECT heartbeat_time FROM robot_client WHERE robot_code = #{robotCode} AND `status` = 1),
+                           NOW()) result
+    </select>
+
+    <select id="getHeartbeatErrorList" resultType="map">
+        select b.customer_name as custName,a.ip,date_format(a.heartbeat_time,'%Y-%m-%d %H:%i:%s') as lastHeartbeatTime from robot_client a
+        left join robot_customer b on a.client_id=b.id
+        where a.msg=1 and (a.heartbeat_time is null or TimeStampDiff(MINUTE,a.heartbeat_time,now())&gt;=#{rangeTime})
+    </select>
+
+    <select id="getUpgradeErrorList" resultType="map">
+        select b.customer_name as custName,a.ip,a.client_id clientId,a.machine_code machineCode,
+         case a.status when 3 then '机器人服务停止'
+         when 4 then '机器人异常'
+         when 5 then '客户端异常'
+         when 7 then '升级失败' end as failCause
+         from robot_client a
+        left join robot_customer b on a.client_id=b.id
+        left join robot_client_app c on c.machine_code=a.machine_code
+        where a.msg=1 and a.status in (3,4,5,7)
+    </select>
+
+    <select id="selectClientLog" resultMap="ClientLogVO">
+        select client_id,machine_name,machine_factory,machine_code from robot_client
+        where machine_code = #{machineCode}
+    </select>
+
+    <select id="selectClientLogByMachineCode" resultType="com.seebon.rpa.entity.robot.RobotClientLog">
+        select user_name,status,remark,create_time from robot_client_log
+        where machine_code = #{machine_code} order by create_time desc
+    </select>
+
+    <select id="selectMoreThanTenMinutes" resultType="integer">
+        select id FROM robot_client where UNIX_TIMESTAMP(heartbeat_time)*1000 &lt; #{time}
+    </select>
+
+    <update id="updateStatusByIds">
+        update robot_client set status = #{status}
+        where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="stopTaskByIds">
+        UPDATE robot_task SET run = #{run} WHERE machine_code IN (
+            SELECT
+                machine_code
+            FROM
+                `robot_client`
+            where id in
+            <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        )
+    </update>
+
+    <select id="getClientDetail" resultType="com.seebon.rpa.entity.robot.dto.design.OperationRequestVo">
+      SELECT b.customer_name custName,a.machine_code machineCode,a.client_id clientId FROM  robot_client a left join robot_customer b on
+        a.client_id=b.id LEFT JOIN robot_client_app c on c.machine_code=a.machine_code
+        where a.id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+         GROUP BY a.id
+    </select>
+    <select id="getBoxErrorList" resultType="java.util.Map">
+      select b.customer_name as custName,a.ip,a.client_id clientId,a.machine_code machineCode from robot_client a
+        left join robot_customer b on a.client_id=b.id
+        left join robot_client_app c on c.machine_code=a.machine_code
+        where a.msg=1 and a.status in (7)
+    </select>
+    <select id="getRobotClientInfo" resultType="com.seebon.rpa.entity.robot.dto.RobotClientDTO">
+        select a.client_id as clientId,a.machine_code as machineCode,a.machine_factory as machineFactory,
+        case a.`status` when 0 then '初始化' when 1 then '准备就绪' when 2 then '正在执行'
+        when 3 then '已关闭' when 4 then '程序异常' when 5 then '客户端异常'
+        when 6 then '正在升级' when 7 then '升级失败' when 8 then '离线' else null end as status,
+        (select count(rt.task_code) from robot_client_app rcp
+        left join robot_task rt on rcp.client_id=rt.client_id and rcp.app_code=rt.app_code and rcp.machine_code=rt.machine_code
+        where rcp.client_id=a.client_id and rcp.machine_code=a.machine_code) as accountNumber,
+        (select count(rt.task_code) from robot_client_app rcp
+        left join robot_task rt on rcp.client_id=rt.client_id and rcp.app_code=rt.app_code and rcp.machine_code=rt.machine_code
+        where rcp.client_id=a.client_id and rcp.machine_code=a.machine_code and rt.app_code=#{appCode}) as appAccountNumber
+         from robot_client a where a.client_id=#{clientId} and a.machine_code=#{machineCode}
+    </select>
+
+    <select id="selectStatistics" resultType="com.seebon.rpa.entity.robot.dto.RobotStatisticsDTO">
+      select
+        count(case when `status` !=9 then 1 else null end) as machineTotal,
+        count(case when `status`=2 then 1 else null end) as execMachines,
+        count(case when `status` in (3,4,5,7,8) then 1 else null end) as abnormalMachines
+        from robot_client
+    </select>
+    <select id="selectExistsCustIds" resultType="java.lang.Integer">
+        select client_id from robot_client
+        where client_id in
+        <foreach collection="custIds" separator="," close=")" open="(" item="item">
+            #{item}
+        </foreach>
+        group by client_id
+
+    </select>
+    <select id="countFreeRobotClient" resultType="java.lang.Integer">
+        select count(1) from robot_client
+        where client_id = #{clientId} and status = 1
+        <if test='machineCodeList != null and machineCodeList.size() > 0'>
+            and machine_code in
+            <foreach collection="machineCodeList" close=")" separator="," open="(" item="item" >
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+
+    <update id="updateBoxCountTime">
+        update robot_client set count_time=count_time+#{countTime}
+        where machine_code=#{machineCode}
+    </update>
+    <update id="updateAppCountTime">
+        update robot_app set run_total_times=run_total_times+#{countTime}
+        where app_code=#{appCode}
+    </update>
+</mapper>

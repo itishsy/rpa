@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotTaskMapper">
+    <resultMap id="taskWithArgs" type="com.seebon.rpa.entity.robot.dto.RobotTaskDTO">
+        <result column="client_id" property="clientId" />
+        <result column="machine_code" property="machineCode" />
+        <result column="task_code" property="taskCode" />
+        <result column="task_name" property="taskName" />
+        <result column="app_code" property="appCode" />
+        <result column="schedule" property="schedule" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="edit_name" property="editName" />
+        <result column="exec_cycle" property="execCycle" />
+        <result column="exec_area_time" property="execAreaTime" />
+        <result column="exec_style" property="execStyle" />
+        <result column="task_type" property="taskType" />
+        <result column="exec_order" property="execOrder" />
+        <result column="last_execution_time" property="lastExecutionTime" />
+        <result column="sync_time" property="syncTime" />
+        <collection property="argsList" ofType="com.seebon.rpa.entity.robot.RobotTaskArgs">
+            <result column="task_code" property="taskCode" />
+            <result column="args_key" property="argsKey" />
+            <result column="args_value" property="argsValue" />
+            <result column="display_order" property="displayOrder" />
+            <result column="form_name" property="formName" />
+            <result column="group_name" property="groupName" />
+            <result column="sync_time" property="syncTime" />
+        </collection>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, client_id, machine_code, app_code, task_code,task_name, schedule, status, run, sync,sync_fee, edit_name,exec_cycle,
+        exec_area_time, exec_style,task_type,exec_order,last_execution_time,sync_time,comment,update_time,create_time,enable_time
+    </sql>
+
+    <select id="findByCode" parameterType="String" resultMap="taskWithArgs">
+        SELECT <include refid="Base_Column_List"/> FROM robot_task WHERE task_code = #{taskCode}
+    </select>
+
+    <select id="findArgs" parameterType="String" resultType="com.seebon.rpa.entity.robot.RobotTaskArgs">
+        SELECT id,args_key argsKey, args_value argsValue,args_type argsType FROM robot_task_args WHERE task_code = #{taskCode}
+    </select>
+
+    <delete id="cleanByTaskCode">
+        delete from robot_task where task_code = #{taskCode};
+        delete from robot_task_args where task_code = #{taskCode};
+        delete from robot_task_schedule where task_code = #{taskCode};
+    </delete>
+
+    <delete id="cleanByAppCode">
+        delete from robot_task where app_code = #{appCode};
+        delete from robot_task_args where task_code in (select distinct task_code from robot_task where app_code=#{appCode});
+        delete from robot_task_schedule where task_code in (select distinct task_code from robot_task where app_code=#{appCode});
+    </delete>
+
+    <select id="selectAllTask" resultType="com.seebon.rpa.entity.robot.vo.RobotTaskVO">
+        SELECT temp.appArgs,temp.appCode,temp.taskCode,temp.taskName,temp.accountNumber FROM (
+            SELECT DISTINCT
+                ra.app_args appArgs,
+                rt.app_code appCode,
+                rt.task_code taskCode,
+                rt.task_name taskName,
+                CASE
+                    WHEN ra.app_args LIKE '%1001001%' THEN
+                        ( SELECT args_value FROM robot_task_args rta WHERE rta.task_code = rt.task_code AND rta.args_key = 'socialNumber' )
+                    WHEN ra.app_args LIKE '%1001002%' THEN
+                        ( SELECT args_value FROM robot_task_args rta WHERE rta.task_code = rt.task_code AND rta.args_key = 'accfundNumber' ) ELSE ''
+                    END AS accountNumber
+            FROM
+                robot_task rt
+            LEFT JOIN robot_app ra ON rt.app_code = ra.app_code
+            WHERE
+                ra.app_args IS NOT NULL
+            AND rt.`status` = 1
+        ) temp
+        WHERE
+            1 = 1
+      AND LENGTH( temp.accountNumber ) > 0
+    </select>
+</mapper>

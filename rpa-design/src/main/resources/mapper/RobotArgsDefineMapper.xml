@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotArgsDefineDao">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.vo.RobotArgsDefineVO">
+        <id property="id" column="id" />
+        <result property="scope" column="scope" />
+        <result property="argsCode" column="args_code" />
+        <result property="fieldKey" column="field_key" />
+        <result property="fieldName" column="field_name" />
+        <result property="fieldType" column="field_type" />
+        <result property="dictKey" column="dict_key" />
+        <result property="displayOrder" column="display_order" />
+        <result property="groupName" column="group_name" />
+        <result property="required" column="required" />
+        <result property="comment" column="comment" />
+        <result property="groupName" column="groupName" />
+        <result property="selectedType" column="selectedType" />
+    </resultMap>
+
+    <resultMap id="Map2" type="com.seebon.rpa.entity.robot.vo.RobotAppArgsVO">
+        <id column="id" property="id" />
+        <result column="app_code" property="appCode" />
+        <result column="group_name" property="groupName" />
+        <result column="field_key" property="fieldKey" />
+        <result column="field_name" property="fieldName" />
+        <result column="field_type" property="fieldType" />
+        <result column="display_order" property="displayOrder" />
+        <result column="comment" property="comment" />
+        <result column="required" property="required" />
+
+        <collection property="robotDataDicts" ofType="com.seebon.rpa.entity.robot.RobotDataDict">
+            <result property="dictKey" column="dict_key" />
+            <result property="dictName" column="dict_name" />
+            <result property="dictCode" column="dict_code" />
+        </collection>
+    </resultMap>
+    <!--查询操作指令参数-->
+    <select id="findAppArgsList" resultMap="BaseResultMap">
+        SELECT
+	rad.id,
+	rad.scope,
+	rad.args_code,
+	rad.field_key,
+	rad.field_name,
+	rad.field_type,
+	rad.dict_key,
+	rad.display_order,
+	rad.display_group,
+	rad.display_group as groupName,
+	rad.required,
+	rad.COMMENT
+FROM
+	robot_args_define rad
+	LEFT JOIN robot_app ra ON rad.args_code = ra.app_code
+	AND rad.scope = 'app'
+	where rad.args_code = #{appCode}
+    </select>
+    <!--修改显示顺序-->
+    <update id="updateExecOrder">
+        UPDATE robot_args_define
+        SET display_order=(display_order - 1)
+        WHERE display_group = #{groupName}
+          AND display_order > #{displayOrder}
+    </update>
+    <!--根据字段ID、字段名称查询是否有相同-->
+    <select id="selectArgs" resultType="com.seebon.rpa.entity.robot.RobotArgsDefine">
+        SELECT *
+        FROM robot_args_define r
+        WHERE (r.field_key = #{fieldKey} OR r.field_name = #{fieldName})
+          AND r.args_code = #{appCode}
+    </select>
+    <select id="selectArgsById" resultType="com.seebon.rpa.entity.robot.RobotArgsDefine">
+        SELECT *
+        FROM robot_args_define r
+        WHERE (r.field_key = #{fieldKey} OR r.field_name = #{fieldName})
+          AND r.args_code = #{appCode}
+          AND r.id!=#{id}
+    </select>
+
+    <select id="selectDynamicField" resultMap="BaseResultMap">
+        select * from robot_args_define
+        where scope = 'robot' and args_code = #{robotCode}
+    </select>
+
+    <select id="selectRobotArgsDefine" resultMap="Map2">
+        select rad.*,rdd.dict_code,rdd.dict_name from
+        robot_args_define rad left join robot_data_dict rdd
+        on rad.dict_key = rdd.dict_key
+WHERE
+	rad.args_code = #{dataCode}
+	AND rad.scope = 'action'
+	order by rdd.display_order
+    </select>
+
+    <select id="selectTarget" resultMap="Map2">
+        select rad.*,rdd.dict_code,rdd.dict_name from
+        robot_args_define rad left join robot_data_dict rdd
+        on rad.dict_key = rdd.dict_key
+WHERE
+	rad.args_code = (select target_type from robot_action where action_code = #{dataCode})
+	AND rad.scope = 'target'
+	order by rdd.display_order
+    </select>
+
+    <select id="selectTargetArg" resultMap="Map2">
+        select rad.*,rdd.dict_code,rdd.dict_name from
+        robot_args_define rad left join robot_data_dict rdd
+        on rad.dict_key = rdd.dict_key
+WHERE
+	rad.args_code = #{dataCode}
+	AND rad.scope = #{targetType}
+    </select>
+
+</mapper>

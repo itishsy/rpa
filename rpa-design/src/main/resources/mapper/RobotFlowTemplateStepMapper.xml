@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotFlowTemplateStepDao">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotFlowTemplateStep">
+        <result column="id" property="id"/>
+        <result column="template_flow_code" property="templateFlowCode"/>
+        <result column="template_step_code" property="templateStepCode"/>
+        <result column="main_flow_code" property="mainFlowCode"/>
+        <result column="flow_code" property="flowCode"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ft.id, ft.template_flow_code, ft.template_step_code, ft.main_flow_code, ft.flow_code
+    </sql>
+
+    <select id="selectByAppCode" resultMap="BaseResultMap">
+	    SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_flow_template_step ft
+        INNER JOIN robot_flow AS rf ON rf.flow_code = ft.main_flow_code
+        INNER JOIN robot_app AS ra ON rf.app_code = ra.app_code
+        WHERE
+            ra.app_code = #{appCode}
+    </select>
+
+    <select id="selectByTemplateFlowCode" resultMap="BaseResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+             robot_flow_template_step ft
+        WHERE
+              ft.template_flow_code = #{templateFlowCode}
+          and ft.template_step_code = #{templateStepCode}
+          and ft.main_flow_code = #{mainFlowCode}
+    </select>
+</mapper>

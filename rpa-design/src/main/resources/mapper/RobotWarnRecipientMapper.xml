@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotWarnRecipientDao">
+    
+    <resultMap id="baseMap" type="com.seebon.rpa.entity.robot.po.robotWarn.RobotWarnRecipient">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="warn_base_id" property="warnBaseId" jdbcType="VARCHAR" />
+        <result column="emp_name" property="empName" jdbcType="VARCHAR" />
+        <result column="phone_number" property="phoneNumber" jdbcType="VARCHAR" />
+        <result column="email" property="email" jdbcType="VARCHAR" />
+    </resultMap>
+    
+</mapper>

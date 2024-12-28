@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotAppMapper">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotApp">
+        <id column="id" property="id"/>
+        <result column="robot_code" property="robotCode"/>
+        <result column="app_code" property="appCode"/>
+        <result column="app_name" property="appName"/>
+        <result column="app_args" property="appArgs"/>
+        <result column="version" property="version"/>
+        <result column="comment" property="comment"/>
+        <result column="status" property="status"/>
+        <result column="release_time" property="releaseTime"/>
+        <result column="batch_run" property="batchRun"/>
+        <result column="session_keep" property="sessionKeep"/>
+        <result column="create_id" property="createId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_id" property="updateId"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List" >
+        a.id, a.robot_code, a.app_code, a.app_name, a.app_args, a.version, a.comment, a.status,a.session_keep,a.batch_run,a.release_time,
+        a.create_id, a.create_time, a.update_id, a.update_time
+    </sql>
+
+    <select id="findApp" parameterType="String" resultMap="BaseResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+        robot_app a
+        LEFT JOIN robot_task t ON t.app_code = a.app_code
+        WHERE
+            t.task_code = #{taskCode}
+        AND t.id IS NOT NULL
+    </select>
+
+    <delete id="clean">
+        delete from robot_app where app_code = '${appCode}';
+        delete from robot_app_schedule where flow_code in(select flow_code from robot_flow where app_code = '${appCode}');
+        delete from robot_flow_step where flow_code in(select f.flow_code from robot_flow f where f.app_code = '${appCode}');
+        delete from robot_flow where app_code = '${appCode}';
+        delete from robot_app_config_form;
+        delete from robot_app_config_group;
+        delete from robot_app_form_group where app_code = '${appCode}';
+        delete from robot_app_general_plan where app_code = '${appCode}';
+        delete from robot_app_config_condition where args_define_id in(select id from robot_args_define where scope = 'app' and args_code = '${appCode}');
+        delete from robot_args_define where scope = 'app' and args_code = '${appCode}';
+    </delete>
+
+    <delete id="cleanFlowTemplate">
+        delete from robot_flow_step where flow_code = '${flowCode}';
+        delete from robot_flow where flow_code = '${flowCode}';
+    </delete>
+</mapper>

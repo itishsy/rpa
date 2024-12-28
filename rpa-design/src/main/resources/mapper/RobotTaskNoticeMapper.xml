@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotTaskNoticeDao">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotTaskNotice">
+        <id column="id" property="id"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="company_name" property="companyName"/>
+        <result column="account_number" property="accountNumber"/>
+        <result column="pay_time" property="payTime"/>
+        <result column="stop_time" property="stopTime"/>
+        <result column="regain_time" property="regainTime"/>
+        <result column="regain_status" property="regainStatus"/>
+        <result column="error" property="error"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, execution_code, client_id, machine_code, task_code, company_name, account_number, pay_time,stop_time,regain_time,regain_status,error,create_time,update_time
+    </sql>
+
+    <update id="updateRegainStatus">
+        UPDATE robot_task_notice SET regain_status = #{regainStatus},update_time = now() WHERE task_code = #{taskCode}
+    </update>
+
+    <select id="selectByTaskCode" resultMap="BaseResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_task_notice
+        WHERE
+            regain_status = 0
+        and task_code = #{taskCode}
+        ORDER BY
+            id DESC
+            LIMIT 1;
+    </select>
+</mapper>

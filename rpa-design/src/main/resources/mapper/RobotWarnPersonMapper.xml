@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotWarnPersonDao">
+
+
+    <select id="getPersonInfo" resultType="com.seebon.rpa.entity.robot.po.design.RobotWarnPerson">
+
+      select id,name,phone_number phoneNumber,email from robot_warn_person where id
+				in (select person_id from robot_warn_person_association where person_type_id=#{personTypeId})
+    </select>
+</mapper>

@@ -1,0 +1,58 @@
+/* deep 深度透传 改变x6默认样式*/
+// stencil 侧边栏
+/deep/ .x6-widget-stencil {
+  width: 260px;  //与stencil.js中侧边栏设置的宽度保持一致
+} 
+
+/deep/ .x6-widget-stencil {
+  background-color: #fff;
+}
+
+/deep/ .x6-widget-stencil-title {
+  background-color: #fff;
+}
+
+/deep/ .x6-widget-stencil-group-title {
+  background-color: #fff !important;
+}
+
+// 组件节点
+/deep/ .x6-widget-transform {
+  margin: -1px 0 0 -1px;
+  padding: 0px;
+  border: 1px solid #239edd;
+}
+
+/deep/ .x6-widget-transform > div {
+  border: 1px solid #239edd;
+}
+
+/deep/ .x6-widget-transform > div:hover {
+  background-color: #3dafe4;
+}
+
+/deep/ .x6-widget-transform-active-handle {
+  background-color: #3dafe4;
+}
+
+/deep/ .x6-widget-transform-resize {
+  border-radius: 0;
+}
+
+/deep/ .x6-widget-selection-inner {
+  border: 1px solid #239edd;
+}
+
+/deep/ .x6-widget-selection-box {
+  opacity: 0;
+}
+
+// minimap 小地图
+/deep/ .x6-widget-minimap-viewport,
+/deep/.x6-widget-minimap-viewport-zoom {
+  border: 2px solid #5f95ff;
+}
+
+/deep/ .x6-graph-scroller  {
+  overflow-x: hidden;
+}

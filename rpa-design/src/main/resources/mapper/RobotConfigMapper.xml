@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotConfigDao">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotConfig">
+        <id property="id" column="id"/>
+        <result property="key" column="key"/>
+        <result property="context" column="context"/>
+        <result property="syncMachineCode" column="sync_machine_code"/>
+        <result property="syncTime" column="sync_time"/>
+        <result property="remark" column="remark"/>
+        <result property="disabled" column="disabled"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ke.id, ke.key, ke.context,ke.remark,ke.disabled,ke.sync_machine_code,ke.sync_time,ke.create_time,ke.update_time
+    </sql>
+
+    <select id="selectByMachineCode" resultMap="BaseResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_config ke
+        where
+            1=1
+        and (ke.sync_machine_code IS NULL or ke.sync_machine_code not like concat('%',#{machineCode},'%'))
+    </select>
+
+    <update id="againSync" parameterType="integer">
+        update robot_config set sync_machine_code=null,sync_time=null,update_time = now() where 1=1
+        <if test="id != null">
+            and id = #{id}
+        </if>
+    </update>
+</mapper>

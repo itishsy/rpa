@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotAppScheduleDao">
+
+    <update id="updateByExecOrder" parameterType="integer">
+        update robot_app_schedule set exec_order = exec_order -1
+        where exec_order > #{execOrder}
+        and flow_code in
+        <foreach collection="flowCodes" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.SysButtonDao">
+    <select id="selectCountByParams" resultType="java.lang.Integer">
+      select count(1) from sys_button a
+      left join sys_menu b on a.menu_id=b.id
+      <where>
+          <if test='code!=null and code!=""'>
+              and a.code=#{code}
+          </if>
+          <if test="menuType!=null">
+              and b.menu_type=#{menuType}
+          </if>
+      </where>
+
+    </select>
+    <select id="selectButtonIdsByNotModuleCodes" resultType="java.lang.Integer">
+        select a.id from sys_button a
+        left join sys_menu b on a.menu_id=b.id
+        where b.menu_type=2 and b.module_code not in
+        <foreach collection="moduleCodes" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

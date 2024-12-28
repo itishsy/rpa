@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.SysUserDao">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.auth.po.SysUser">
+        <!--@mbg.generated-->
+        <!--@Table sys_user-->
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <id column="username" jdbcType="VARCHAR" property="username" />
+        <result column="client_id" jdbcType="VARCHAR" property="clientId" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="cust_id" jdbcType="INTEGER" property="custId" />
+        <result column="cust_name" jdbcType="VARCHAR" property="custName" />
+        <result column="user_type" jdbcType="INTEGER" property="userType" />
+        <result column="user_category" jdbcType="INTEGER" property="userCategory" />
+        <result column="salt" jdbcType="VARCHAR" property="salt" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="status" jdbcType="INTEGER" property="status" />
+        <result column="phone_number" jdbcType="VARCHAR" property="phoneNumber" />
+        <result column="email" jdbcType="VARCHAR" property="email" />
+        <result column="status" jdbcType="INTEGER" property="status" />
+        <result column="expires_in" jdbcType="INTEGER" property="expiresIn" />
+        <result column="comment" jdbcType="VARCHAR" property="comment" />
+        <result column="create_id" jdbcType="INTEGER" property="createId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="update_id" jdbcType="INTEGER" property="updateId" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id, username, client_id, `password`, cust_id, salt, `name`, `status`
+    </sql>
+
+    <select id="findUser" resultType="com.seebon.rpa.entity.auth.vo.UserVO">
+        SELECT
+          u.`id`,
+          u.`username`,
+          u.`password`,
+          u.`name`,
+          u.`cust_id` as custId,
+          u.`cust_name` as custName,
+          u.user_type as userType,
+          u.main_user as mainUser,
+          u.expires_in as expiresIn,
+          u.user_category as userCategory
+        FROM `sys_user` u
+        WHERE u.`username` = #{username} and u.status=1;
+    </select>
+
+    <select id="findRoles" resultType="java.lang.String">
+        SELECT
+          r.`name`
+        FROM `sys_user` u
+        JOIN `sys_user_role` ur ON u.`id` = ur.`user_id`
+        JOIN `sys_role` r ON r.`id` = ur.`role_id`
+        WHERE u.`username` = #{username};
+    </select>
+    <select id="selectMenuByUser" resultType="com.seebon.rpa.entity.auth.vo.UserMenuVO">
+        SELECT
+            sm.id,
+            sm.name,
+            sm.url,
+            sm.parent_id as parentId,
+            sm.sort,
+            sm.level,
+            sm.module_code as moduleCode,
+            sm.icon_class as iconClass,
+            sm.create_id as createId,
+            sm.create_time as createTime,
+            sm.update_id as updaueId,
+            sm.update_time as updateTime
+        FROM
+            sys_menu sm
+        WHERE ifnull(sm.status, 1)=1
+            <if test="menuType!=null">
+                and sm.menu_type=#{menuType}
+            </if>
+        and
+        (EXISTS (
+        SELECT
+        1
+        FROM
+        sys_role_menu srm1
+        JOIN sys_user_role sur1 ON sur1.role_id = srm1.`role_id`
+        WHERE
+        srm1.`menu_id` = 0
+        AND sur1.`user_id` = #{userId}
+
+        )
+        OR sm.id IN ( SELECT srm1.menu_id FROM sys_role_menu srm1
+        JOIN sys_user_role sur1 ON sur1.role_id = srm1.`role_id`
+        join sys_role sr on sur1.role_id=sr.id
+        WHERE sur1.`user_id` = #{userId} and sr.status=1
+        )
+        )
+        order by sort
+    </select>
+
+    <select id="selectButtonsByUserId" resultType="com.seebon.rpa.entity.auth.po.SysButton">
+        select but.* from sys_button but
+        left join sys_menu sm on but.menu_id=sm.id
+        <where>
+            <if test="menuType!=null">
+                and sm.menu_type=#{menuType}
+            </if>
+            and (
+                EXISTS (
+                SELECT
+                1
+                FROM
+                sys_role_button srm1
+                JOIN sys_user_role sur1 ON sur1.role_id = srm1.`role_id`
+                WHERE
+                srm1.`button_id` = 0
+                AND sur1.`user_id` = #{userId}
+
+                )
+                OR but.id IN ( SELECT srm1.button_id FROM sys_role_button srm1
+                JOIN sys_user_role sur1 ON sur1.role_id = srm1.`role_id`
+                JOIN sys_role sr on sur1.role_id=sr.id
+                WHERE sur1.`user_id` = #{userId} and sr.status=1
+                )
+            )
+        </where>
+    </select>
+
+    <resultMap id="voMap" type="com.seebon.rpa.entity.auth.vo.SysUserVO" extends="BaseResultMap">
+        <collection property="roles" ofType="com.seebon.rpa.entity.auth.po.SysRole">
+            <result column="roleId" property="id" />
+            <result column="roleName" property="name" />
+        </collection>
+    </resultMap>
+
+    <select id="getCustUserList" resultMap="voMap">
+        select su.id,su.`status`,su.username,su.`name`,su.phone_number,su.email,su.comment,su.create_time
+        from sys_user su
+        where su.cust_id=#{custId} and user_type=2 and user_category=1 and ifnull(su.main_user,0)=0
+        <if test="keyword != null and keyword != ''">
+            and (su.username like '%${keyword}%'
+            or su.name like '%${keyword}%'
+            or su.comment like '%${keyword}%'
+            or su.phone_number like '%${keyword}%'
+            or su.email like '%${keyword}%'
+            )
+        </if>
+        order by su.`status` desc,su.id desc
+    </select>
+
+    <resultMap id="adminVoMap" type="com.seebon.rpa.entity.auth.vo.SysAdminUserVO" extends="BaseResultMap">
+        <collection property="roles" ofType="com.seebon.rpa.entity.auth.po.SysRole">
+            <result column="roleId" property="id" />
+            <result column="roleName" property="name" />
+            <result column="code" property="code" />
+        </collection>
+    </resultMap>
+
+    <select id="selectCountByParams" resultType="java.lang.Integer">
+      select count(1) from sys_user su
+      <include refid="pageFilter"/>
+    </select>
+    <select id="selectAdminUserPage" resultMap="adminVoMap">
+        select su.id,su.`status`,su.username,su.name,su.phone_number,su.comment,
+        su.email,
+        sr.id as roleId,sr.`name` as roleName,sr.`code`
+        from (select su.* from sys_user su
+          <include refid="pageFilter"/>
+          order by su.`status` desc,su.id desc
+          <if test="size!=null and start!=null">
+              limit ${start}, ${size}
+          </if>
+        ) su
+        left join sys_user_role sur on su.id=sur.user_id
+        left join sys_role sr on sur.role_id=sr.id
+        order by su.`status` desc,su.id desc
+    </select>
+
+    <select id="getAdminUser" resultMap="adminVoMap">
+        select su.id,su.`status`,su.username,su.name,su.phone_number,su.comment,
+        su.email,
+        sr.id as roleId,sr.`name` as roleName,sr.`code`
+        from sys_user su
+        left join sys_user_role sur on su.id=sur.user_id
+        left join sys_role sr on sur.role_id=sr.id
+        where su.id=#{userId}
+    </select>
+    <select id="getOperatorUserByRoleIds" resultType="com.seebon.rpa.entity.auth.po.SysUser">
+        select
+        a.id,
+        a.cust_id as custId,
+        a.status,
+        a.username,
+        a.name,
+        a.phone_number as phoneNumber,
+        a.email
+        from sys_user a
+        where a.user_type=1 and EXISTS (select 1 from sys_user_role b where a.id=b.user_id
+        and b.role_id in
+        <foreach collection="roleIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+    </select>
+    <select id="existsEmail" resultType="java.lang.Boolean">
+        select exists ( select 1 from sys_user su
+            where su.cust_id=#{custId} and find_in_set(#{email},su.email)
+            <if test="eliminateUserId != null">
+                and su.id != #{eliminateUserId}
+            </if>
+        )
+    </select>
+
+    <resultMap id="dinDinVOMap" type="com.seebon.rpa.entity.auth.vo.SysUserDinDinVO" extends="BaseResultMap">
+        <result column="dindin_phone_number" property="dindinPhoneNumber"/>
+    </resultMap>
+
+    <select id="selectSysUserDinDinVOAll" resultMap="dinDinVOMap">
+        select * from sys_user;
+    </select>
+
+    <sql id="pageFilter">
+        <where>
+            <if test="userType!=null">
+                and su.user_type=#{userType}
+            </if>
+            <if test="status!=null and status.size()>0">
+                and su.status in
+                <foreach collection="status" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test='keyword != null and keyword != ""'>
+                and (su.username like '%${keyword}%' ESCAPE '/'
+                or su.name like '%${keyword}%'  ESCAPE '/'
+                or su.phone_number like '%${keyword}%' ESCAPE '/'
+                or su.email like '%${keyword}%' ESCAPE '/'
+                or EXISTS (select 1 from sys_user_role sur
+                left join sys_role sr on sur.role_id=sr.id where su.id=sur.user_id and sr.name like '%${keyword}%' ESCAPE '/')
+                )
+            </if>
+        </where>
+    </sql>
+
+
+</mapper>

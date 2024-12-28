@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotAppConfigGroupDao">
+    <resultMap id="robotAppConfigInputMap" type="com.seebon.rpa.entity.robot.RobotAppConfigForm">
+        <result column="id" jdbcType="VARCHAR" property="id" />
+        <result column="INPUT_ID" jdbcType="VARCHAR" property="inputId" />
+        <result column="INPUT_NAME" jdbcType="VARCHAR" property="inputName" />
+        <result column="CREATE_ROBOT_APP_ID" jdbcType="VARCHAR" property="createRobotAppId" />
+        <result column="TYPE" jdbcType="VARCHAR" property="type" />
+    </resultMap>
+
+    <resultMap id="robotAppConfigGroupMap" type="com.seebon.rpa.entity.robot.RobotAppConfigGroup">
+        <result column="GROUP_NAME" jdbcType="VARCHAR" property="groupName" />
+        <result column="INPUT_ID" jdbcType="VARCHAR" property="inputId" />
+        <result column="status" jdbcType="VARCHAR" property="status" />
+        <result column="type" jdbcType="VARCHAR" property="type" />
+        <result column="app_code" jdbcType="VARCHAR" property="appCode" />
+    </resultMap>
+
+    <resultMap id="robotAppConfigGroupItemMap" type="com.seebon.rpa.entity.robot.RobotArgsDefine">
+        <result column="GROUP_ID" jdbcType="INTEGER" property="groupId" />
+        <result column="field_name" jdbcType="VARCHAR" property="fieldName" />
+        <result column="field_type" jdbcType="VARCHAR" property="fieldType" />
+        <result column="field_key" jdbcType="VARCHAR" property="fieldKey" />
+        <result column="args_code" jdbcType="VARCHAR" property="argsCode" />
+        <result column="comment" jdbcType="VARCHAR" property="comment" />
+        <result column="required" jdbcType="VARCHAR" property="required" />
+        <result column="dict_key" jdbcType="VARCHAR" property="dictKey" />
+        <result column="quantity" jdbcType="VARCHAR" property="quantity" />
+        <result column="condition" jdbcType="VARCHAR" property="cond" />
+        <result column="type" jdbcType="VARCHAR" property="type" />
+        <result column="drop_down_option" jdbcType="VARCHAR" property="dropDownOption" />
+    </resultMap>
+
+    <resultMap id="robotAppConfigConditionMap" type="com.seebon.rpa.entity.robot.RobotAppConfigCondition">
+        <result column="LOGICAL_OPERATOR" jdbcType="VARCHAR" property="logicalOperator" />
+        <result column="CONDITION_LEFT" jdbcType="VARCHAR" property="conditionLeft" />
+        <result column="CONDITION_RIGHT" jdbcType="VARCHAR" property="conditionRight" />
+        <result column="RELATION" jdbcType="VARCHAR" property="relation" />
+        <result column="TYPE" jdbcType="VARCHAR" property="type" />
+        <result column="COLUMN" jdbcType="VARCHAR" property="column" />
+        <result column="GROUP_ITEM_ID" jdbcType="INTEGER" property="groupItemId" />
+        <result column="CONDITION" jdbcType="VARCHAR" property="condition" />
+    </resultMap>
+
+    <select id="selectGroupByIds" resultType="com.seebon.rpa.entity.robot.RobotAppConfigGroup" parameterType="java.util.List">
+        select * from robot_app_config_group
+        where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <insert id="insertGroupWithIdentity" parameterType="com.seebon.rpa.entity.robot.RobotAppConfigGroup" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into robot_app_config_group(group_name,robot_type) values (#{groupName},#{robotType})
+    </insert>
+
+    <insert id="addInput">
+        insert into robot_app_config_input(input_id,input_name,create_robot_app_id,`type`) values(#{inputId},#{inputName},#{createRobotAppId},#{type})
+    </insert>
+    <insert id="addGroup">
+        insert into robot_app_config_group(group_name,input_id,status,`type`,app_code) values (#{groupName},#{inputId},#{status},#{type},#{appCode})
+    </insert>
+    <insert id="addGroupItem">
+        insert into robot_args_define(scope,form_group_id,
+                `field_name`,
+                field_type,
+                field_key,
+                `args_code`,
+                comment,
+                required,
+                dict_key,
+                quantity,
+                `robot_type`,
+                drop_down_option)
+        values ('app',
+            #{formGroupId, jdbcType=INTEGER},
+            #{fieldName, jdbcType=VARCHAR},
+            #{fieldType, jdbcType=VARCHAR},
+            #{fieldKey, jdbcType=VARCHAR},
+            #{argsCode, jdbcType=VARCHAR},
+            #{comment, jdbcType=VARCHAR},
+            #{required, jdbcType=VARCHAR},
+            #{dictKey, jdbcType=VARCHAR},
+            #{quantity, jdbcType=INTEGER},
+            #{robotType, jdbcType=VARCHAR},
+            #{dropDownOption, jdbcType=VARCHAR})
+    </insert>
+    <insert id="addConditionList">
+        insert into robot_app_config_condition (logical_operator,condition_left,condition_right,relation,`type`,`column`,group_item_id)
+        values
+        <foreach collection="conditionList" item="item" separator="," >
+            (#{item.logicalOperator, jdbcType=VARCHAR},
+            #{item.conditionLeft, jdbcType=VARCHAR},
+            #{item.conditionRight, jdbcType=VARCHAR},
+            #{item.relation, jdbcType=VARCHAR},
+            #{item.type, jdbcType=VARCHAR},
+            #{item.column, jdbcType=VARCHAR},
+            #{item.groupItemId, jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+    <insert id="saveGroupAndType">
+        insert into group_type(group_name,`type`) values (#{groupName},#{type})
+    </insert>
+    <update id="editGroupInfo">
+        update robot_app_config_group
+        <set>
+            <if test="groupName != null and groupName !=''">
+                group_name = #{groupName},
+            </if>
+            <if test="inputId != null and inputId !=''">
+                input_id = #{inputId},
+            </if>
+            <if test="status != null and status !=''">
+                status = #{status},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateGroupItemConditionById">
+        update robot_args_define
+        set `condition` = #{condition}
+        where id = #{id}
+    </update>
+    <update id="updateRobotAppStatusById">
+        update robot_app
+        set `status`= 0
+        where app_code in
+        <foreach collection="appCode" open="(" close=")" item="i" separator=",">
+            #{i}
+        </foreach>
+    </update>
+    <update id="updateInputInfo">
+        update robot_app_config_input
+        <set>
+            <if test="inputId!=null and inputId!='' ">input_id=#{inputId, jdbcType=VARCHAR},</if>
+            <if test="inputName!=null and inputName!='' ">input_name=#{inputName, jdbcType=VARCHAR},</if>
+            <if test="createRobotAppId!=null and createRobotAppId!='' ">create_robot_app_id=#{createRobotAppId, jdbcType=VARCHAR},</if>
+            <if test="type!=null and type!='' ">`type`=#{type, jdbcType=VARCHAR},</if>
+        </set>
+        <where>
+            <if test="inputId != null and inputId != ''">
+                input_id = #{inputId,jdbcType=VARCHAR}
+            </if>
+            <if test="id != null and id !=''">
+                and id = #{id}
+            </if>
+            <if test="type!=null and type!='' ">
+                and `type`=#{type}
+            </if>
+        </where>
+    </update>
+    <update id="updateGroupItem">
+        update robot_args_define
+        <set>
+            <if test="groupId!=null and groupId!='' ">group_id=#{groupId, jdbcType=INTEGER},</if>
+            <if test="fieldName!=null and fieldName!='' ">`field_name`=#{fieldName, jdbcType=VARCHAR},</if>
+            <if test="fieldType!=null and fieldType!='' ">field_type=#{fieldType, jdbcType=VARCHAR},</if>
+            <if test="fieldKey!=null and fieldKey!='' ">field_key=#{fieldKey, jdbcType=VARCHAR},</if>
+            <if test="argsCode!=null and argsCode!='' ">`args_code`=#{argsCode, jdbcType=VARCHAR},</if>
+            <if test="comment!=null and comment!='' ">comment=#{comment, jdbcType=VARCHAR},</if>
+            <if test="required!=null and required!='' ">required=#{required, jdbcType=VARCHAR},</if>
+            <if test="dictKey!=null and dictKey!='' ">dict_key=#{dictKey, jdbcType=VARCHAR},</if>
+            <if test="quantity!=null and quantity!='' ">quantity=#{quantity, jdbcType=VARCHAR},</if>
+            <if test="condition!=null and condition!='' ">condition=#{condition, jdbcType=VARCHAR},</if>
+            <if test="type!=null and type!='' ">type=#{type, jdbcType=VARCHAR},</if>
+            <if test="dropDownOption!=null and dropDownOption!=''">drop_down_option=#{dropDownOption, jdbcType=VARCHAR}</if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <update id="editGroupItem">
+        update robot_args_define
+        <set>
+            <if test="groupId!=null and groupId!='' ">group_id=#{groupId, jdbcType=INTEGER},</if>
+            <if test="fieldName!=null and fieldName!='' ">`field_name`=#{fieldName, jdbcType=VARCHAR},</if>
+            <if test="fieldType!=null and fieldType!='' ">field_type=#{fieldType, jdbcType=VARCHAR},</if>
+            <if test="fieldKey!=null and fieldKey!='' ">field_key=#{fieldKey, jdbcType=VARCHAR},</if>
+            <if test="argsCode!=null and argsCode!='' ">`args_code`=#{argsCode, jdbcType=VARCHAR},</if>
+            <if test="comment!=null and comment!='' ">comment=#{comment, jdbcType=VARCHAR},</if>
+            <if test="required!=null and required!='' ">required=#{required, jdbcType=VARCHAR},</if>
+            <if test="dictKey!=null and dictKey!='' ">dict_key=#{dictKey, jdbcType=VARCHAR},</if>
+            <if test="quantity!=null and quantity!='' ">quantity=#{quantity, jdbcType=VARCHAR},</if>
+            <if test="condition!=null and condition!='' ">condition=#{condition, jdbcType=VARCHAR},</if>
+            <if test="type!=null and type!='' ">`type`=#{type, jdbcType=VARCHAR},</if>
+            <if test="dropDownOption!=null and dropDownOption!=''">drop_down_option=#{dropDownOption, jdbcType=VARCHAR}</if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <update id="editGroupInfoByGroupIds">
+        update robot_app_config_group
+        <set>
+            <if test="configGroup.groupName != null and configGroup.groupName !=''">
+                group_name = #{configGroup.groupName}
+            </if>
+        </set>
+        where
+        group_name = #{oldGroupName}
+        and `type` = #{configGroup.type}
+        and input_id not in
+        <foreach collection="ids" item="item" separator="," close=")" open="(" >
+            #{item}
+        </foreach>
+    </update>
+    <update id="editGroupInputIdByPrimarys">
+        update robot_app_config_group
+         set input_id = #{newInputId}
+         where `type` = #{type}
+         and group_name =#{groupName}
+         and status !=1
+         and app_code = #{appCode}
+    </update>
+    <update id="updateGroupType">
+        update group_type set group_name = #{groupName} where `type` = #{type} and group_name =#{oldGroupName}
+    </update>
+    <update id="editGroupNameById">
+        update robot_app_config_group set group_name =#{groupName} where id=#{id}
+    </update>
+    <update id="editGroupNameByTypeAndNewGroupName">
+        update robot_app_config_group
+            set group_name =#{groupName}
+        where `type`=#{type}
+        <if test="oldGroupName !=null and oldGroupName!=''">
+            and group_name =#{oldGroupName}
+        </if>
+        <if test="appCode != null and appCode !=''">
+            and app_code = #{appCode}
+        </if>
+        <if test="ids != null and ids !=''">
+            and input_id not in
+            <foreach collection="ids" item="item" separator="," close=")" open="(" >
+                #{item}
+            </foreach>
+        </if>
+    </update>
+
+    <delete id="deleteCondition">
+        delete from robot_app_config_condition
+        where group_item_id = #{groupItemId}
+
+    </delete>
+    <delete id="deleteRobotAppConfigGroupByGroupId">
+        delete from robot_app_config_group where id = #{id}
+    </delete>
+    <delete id="deleteRobotAppConfigGroupItemByGroupId">
+        delete from robot_args_define where group_id = #{id}
+    </delete>
+    <delete id="deleteGroupItemById">
+        delete from robot_args_define where id = #{id}
+    </delete>
+    <delete id="deleteRobotAppConfigConditionByGroupItemIds">
+        delete from robot_app_config_condition
+        where
+        group_item_id in
+        <foreach collection="list" separator="," open="(" close=")" item="item">
+            #{item.itemInfoId}
+        </foreach>
+    </delete>
+    <delete id="deleteInputById">
+        delete from robot_app_config_input where id = #{id}
+    </delete>
+    <delete id="deleteGroupTypeByGroupNameAndType">
+        delete from group_type where `type` =#{type} and group_name = #{groupName}
+    </delete>
+
+
+    <select id="checkGroupItem" resultType="java.lang.Integer">
+        select count(1) from robot_args_define
+        where scope = 'app'
+            <if test="groupId!=null and groupId!='' ">and group_id=#{groupId}</if>
+            <if test="fieldName!=null and fieldName!='' ">and field_name=#{fieldName}</if>
+            <if test="fieldType!=null and fieldType!='' ">and field_type=#{fieldType}</if>
+            <if test="fieldKey!=null and fieldKey!='' ">and field_key=#{fieldKey}</if>
+            <if test="dropDownOption!=null and dropDownOption!='' ">and drop_down_option=#{dropDownOption}</if>
+            <if test="comment!=null and comment!='' ">and comment=#{comment}</if>
+            <if test="required!=null and required!='' ">and required=#{required}</if>
+            <if test="dictKey!=null and dictKey!='' ">and dict_key=#{dictKey}</if>
+
+    </select>
+
+    <select id="getInputInfo" resultMap="robotAppConfigInputMap">
+        select id,input_id,input_name,create_robot_app_id,`type`
+         from robot_app_config_input
+        <where>
+            <if test="configInput.id!=null and configInput.id!='' ">and `id` = #{configInput.id} </if>
+            <if test="configInput.type!=null and configInput.type!='' ">and `type` = #{configInput.type} </if>
+            <if test="configInput.inputId!=null and configInput.inputId!='' ">and input_id =#{configInput.inputId} </if>
+            <if test="configInput.inputName!=null and configInput.inputName!='' ">and input_name =#{configInput.inputName}</if>
+            <if test="configInput.createRobotAppId!=null and configInput.createRobotAppId!='' ">and create_robot_app_id=#{configInput.createRobotAppId}</if>
+            <if test="robotCodeList !=null and robotCodeList !=''">
+                and create_robot_app_id in
+                <foreach collection="robotCodeList" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="getGroupInfo" resultMap="robotAppConfigGroupMap">
+        select group_name,
+               input_id,
+               id
+         from robot_app_config_group
+        <where>
+            <if test="groupName!=null and groupName!='' ">and group_name like concat('%',#{groupName},'%')</if>
+            <if test="inputId!=null and inputId!='' ">and input_id =#{inputId}</if>
+            <if test="id!=null and id!='' ">and id =#{id}</if>
+        </where>
+    </select>
+    <select id="getGroupItemInfo" resultMap="robotAppConfigGroupItemMap">
+        select
+            id,
+            group_id,
+            `field_name`,
+            field_type,
+            field_key,
+            `args_code`,
+            comment,
+            required,
+            dict_key,
+            quantity,
+            `condition`,
+            `type`
+        from robot_args_define
+        <where>
+            and scope = 'app'
+            <if test="showOrHidden !=null and showOrHidden !='' ">and `show_or_hidden` =#{showOrHidden}</if>
+            <if test="id!=null and id!='' ">and id=#{id}</if>
+            <if test="formGroupId!=null and formGroupId!='' ">and form_group_id=#{formGroupId}</if>
+            <if test="fieldName!=null and fieldName!='' ">and field_name=#{fieldName}</if>
+            <if test="fieldType!=null and fieldType!='' ">and field_type=#{fieldType}</if>
+            <if test="fieldKey!=null and fieldKey!='' ">and field_key=#{fieldKey}</if>
+            <if test="dropDownOption!=null and dropDownOption!='' ">and drop_down_option=#{dropDownOption}</if>
+            <if test="comment!=null and comment!='' ">and comment=#{comment}</if>
+            <if test="required!=null and required!='' ">and required=#{required}</if>
+            <if test="dictKey!=null and dictKey!='' ">and dict_key=#{dictKey}</if>
+            <if test="quantity!=null and quantity!='' ">and quantity=#{quantity}</if>
+            <if test="condition!=null and condition!='' ">and `condition`like concat('%',#{condition},'%') </if>
+        </where>
+    </select>
+    <select id="countGroupItemInfo" resultType="java.lang.Integer">
+        select count(1)
+        from robot_args_define
+        <where>
+            and scope = 'app'
+            <if test="showOrHidden !=null and showOrHidden !='' ">and `show_or_hidden` =#{showOrHidden}</if>
+            <if test="formGroupId!=null and formGroupId!='' ">and form_group_id=#{formGroupId}</if>
+            <if test="fieldName!=null and fieldName!='' ">and field_name=#{fieldName}</if>
+            <if test="fieldType!=null and fieldType!='' ">and field_type=#{fieldType}</if>
+            <if test="fieldKey!=null and fieldKey!='' ">and field_key=#{fieldKey}</if>
+            <if test="dropDownOption!=null and dropDownOption!='' ">and drop_down_option=#{dropDownOption}</if>
+            <if test="comment!=null and comment!='' ">and comment=#{comment}</if>
+            <if test="required!=null and required!='' ">and required=#{required}</if>
+            <if test="dictKey!=null and dictKey!='' ">and dict_key=#{dictKey}</if>
+            <if test="quantity!=null and quantity!='' ">and quantity=#{quantity}</if>
+        </where>
+    </select>
+    <select id="getConditionByGroupItemId" resultMap="robotAppConfigConditionMap">
+        select logical_operator,
+            condition_left,
+            condition_right,
+            relation,
+            `type`,
+            `column`,
+            group_item_id
+
+        from robot_app_config_condition
+        where group_item_id = #{id}
+    </select>
+    <select id="getGroupBaseInfo" resultMap="robotAppConfigGroupMap">
+        select group_name,
+
+                id,
+                `robot_type`
+        from robot_app_config_group
+        where
+            status = '0'
+            <if test="groupName!=null and groupName!='' ">and group_name like concat('%',#{groupName},'%')</if>
+
+            <if test="id!=null and id!='' ">and id =#{id}</if>
+
+    </select>
+    <select id="getGroupInfoByInputId" resultMap="robotAppConfigGroupMap">
+        select distinct group_name
+        from robot_app_config_group
+        <where>
+            status = '0'
+            <if test="set !=null and set !='' ">
+                and input_id in
+                <foreach collection="set" open="(" close=")" separator="," item="item">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="countInputInfo" resultType="java.lang.Integer">
+        select count(1)
+        from robot_app_config_input
+        <where>
+            <if test="type!=null and type!='' "> `type` = #{type} </if>
+            <if test="inputId!=null and inputId!='' ">and input_id =#{inputId} </if>
+            <if test="inputName!=null and inputName!='' ">or input_name =#{inputName}</if>
+        </where>
+    </select>
+    <select id="getInputInfoByType" resultMap="robotAppConfigInputMap">
+        select id, input_id,input_name
+        from robot_app_config_input
+        <where>
+            <if test="type!=null and type!='' "> `type` = #{type} </if>
+            <if test="inputId!=null and inputId!='' ">and input_id = #{inputId} </if>
+        </where>
+    </select>
+    <select id="getInputInfoByInputId" resultType="com.seebon.rpa.entity.robot.RobotAppConfigForm">
+        select input_id,input_name,create_robot_app_id,`type`
+        from robot_app_config_input
+        where input_id = #{inputId}
+    </select>
+    <select id="countGroup" resultType="java.lang.Integer">
+        select count(1) from robot_app_config_group where input_id = #{inputId} and status = 0
+    </select>
+    <select id="getInputInfoById" resultType="com.seebon.rpa.entity.robot.RobotAppConfigForm">
+        select input_id,input_name,create_robot_app_id,`type`
+        from robot_app_config_input
+        where id = #{id}
+    </select>
+    <select id="checkColumnKey" resultType="java.lang.Integer">
+        select
+            count(1)
+        from
+            robot_app_config_group a
+        left join robot_args_define b
+        on a.id =b.group_id
+        where
+            input_id = #{inputId}
+            and b.field_key =#{columnKey}
+    </select>
+    <select id="getGroup" resultMap="robotAppConfigGroupMap">
+        select group_name,
+        input_id,
+        id
+        from robot_app_config_group
+        where
+        status = '0'
+        <if test="groupName!=null and groupName!='' ">and group_name =#{groupName}</if>
+        <if test="inputId!=null and inputId!='' ">and input_id =#{inputId}</if>
+        <if test="type!=null and type!='' ">and type =#{type}</if>
+        <if test="appCode!=null and appCode!='' ">and app_code =#{appCode}</if>
+
+    </select>
+    <select id="getAllConditionColumnByGroupId" resultType="java.lang.String">
+        select
+            distinct c.`column`
+        from
+            robot_app_config_group a
+        left join robot_args_define b on
+            a.id = b.group_id
+        left join robot_app_config_condition c on
+            c.group_item_id = b.id
+        where
+            a.id = #{groupId}
+    </select>
+    <select id="getGroupInfoByType" resultMap="robotAppConfigGroupMap">
+        select id, group_name
+        from group_type
+        <where>
+            <if test="type !=null and type !='' ">
+               and type = #{type}
+            </if>
+        </where>
+    </select>
+    <select id="getGroupIdByType" resultType="java.lang.Integer">
+        select id from robot_app_config_group where `type` = #{type}
+    </select>
+    <select id="countGroupNameByType" resultType="java.lang.Integer">
+        select count(1) from group_type where `type`=#{type} and group_name = #{groupName}
+    </select>
+    <select id="getGroupNameByid" resultType="java.lang.String">
+        select group_name from robot_app_config_group where id = #{id}
+    </select>
+    <select id="getGroupIdByGroupName" resultType="java.lang.String">
+        select distinct input_id from robot_app_config_group where group_name = #{groupName}
+    </select>
+    <select id="getAllColumnKey" resultType="java.lang.String">
+        select
+             b.field_key
+        from
+            robot_app_config_group a
+        left join robot_args_define b on
+            a.id = b.group_id
+        where
+            b.field_key is not null
+            and a.input_id = #{inputId}
+            and a.type = #{type}
+            and a.app_code = #{appCode}
+    </select>
+    <select id="countColumnKeyByInputPrimary" resultType="java.lang.Integer">
+        select
+             count(1)
+        from
+            robot_app_config_group a
+        left join robot_args_define b on
+            a.id = b.group_id
+        right join robot_app_config_input c on c.input_id= a.input_id
+        and c.type = a.type and c.create_robot_app_id = a.app_code
+        where
+            b.field_key is not null
+            and c.input_id = #{newInputId}
+            and c.create_robot_app_id = #{appCode}
+            and c.`type` = #{type}
+            and b.field_key in
+	        <foreach collection="columnKeys" open="(" close=")" separator="," item="i">
+                #{i}
+            </foreach>
+
+    </select>
+    <select id="getInputPrimaryByInputId" resultType="java.lang.String">
+        select id from robot_app_config_input where `type` =#{type} and input_id = #{newInputId}
+    </select>
+    <select id="getInputAppCodeByInputIdAndType" resultType="java.lang.String">
+        select create_robot_app_id from robot_app_config_input where `type` =#{type} and input_id = #{newInputId}
+    </select>
+    <select id="getInputAppCodeByTypeAndInputId" resultType="java.lang.String">
+        select create_robot_app_id from robot_app_config_input where `type` =#{type} and input_id = #{inputId}
+    </select>
+    <select id="getGroupInfoByNotThis" resultMap="robotAppConfigGroupMap">
+        select group_name,
+        input_id,
+        id
+        from robot_app_config_group
+        where
+        status = '0'
+        <if test="groupName!=null and groupName!='' ">and group_name =#{groupName}</if>
+        <if test="inputId!=null and inputId!='' ">and input_id !=#{inputId}</if>
+        <if test="type!=null and type!='' ">and type =#{type}</if>
+        <if test="appCode!=null and appCode!='' ">and app_code =#{appCode}</if>
+    </select>
+    <select id="countGroupNameByTypeAndAppCode" resultType="java.lang.Integer">
+        select count(1) from robot_app_config_group
+        where
+        status != 1
+        and`type` = #{type}
+        <if test="appCode !=null and appCode!=''">
+            and app_code = #{appCode}
+        </if>
+        and group_name = #{groupName}
+    </select>
+
+
+</mapper>

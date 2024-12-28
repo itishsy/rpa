@@ -1,0 +1,10 @@
+uiautomation==2.0.18
+pywinauto==0.6.8
+cmake==3.29.3
+pypiwin32==306
+packaging==23.2
+psutil==5.9.7
+PyMuPDF==1.18.19
+pdfplumber==0.6.0
+xlrd==2.0.1
+cryptography==3.4.8

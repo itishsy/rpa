@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotFlowTemplateMapper">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotFlowTemplate">
+        <id column="id" property="id"/>
+        <result column="template_flow_code" property="templateFlowCode"/>
+        <result column="flow_code" property="flowCode"/>
+    </resultMap>
+
+    <select id="selectByFlowCode" resultMap="BaseResultMap">
+        SELECT id,template_flow_code,flow_code FROM robot_flow_template WHERE flow_code = #{flowCode}
+    </select>
+
+    <delete id="clean">
+        delete from robot_flow_template where flow_code = #{flowCode};
+        delete from robot_flow_template_step where main_flow_code = #{flowCode};
+        delete from robot_flow_step_args where flow_code = #{flowCode};
+    </delete>
+</mapper>
+

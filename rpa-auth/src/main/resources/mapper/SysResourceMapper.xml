@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.SysResourceDao">
+
+    <select id="findByRole" resultType="com.seebon.rpa.entity.auth.po.SysResource">
+        SELECT
+          r.`id`,
+          r.`uri_pattern` as uriPattern,
+          r.`common`
+        FROM
+          `sys_resource` r
+          JOIN `sys_privilege` p ON r.`id` = p.`resource_id`
+          JOIN `sys_role` ro ON ro.`id` = p.`role_id`
+        WHERE ro.`code` = #{role} and ro.status=1;
+    </select>
+
+</mapper>

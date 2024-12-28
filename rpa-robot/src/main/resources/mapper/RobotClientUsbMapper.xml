@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotClientUsbMapper">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotClientUsb">
+        <id column="id" property="id"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="sort" property="sort"/>
+        <result column="orginal" property="orginal"/>
+        <result column="sync" property="sync"/>
+        <result column="remark" property="remark"/>
+        <result column="sync_time" property="syncTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, machine_code, sort, orginal,sync, remark,sync_time, create_time, update_time
+    </sql>
+
+    <delete id="clean">
+        delete from robot_client_usb where machine_code = #{machineCode};
+    </delete>
+</mapper>

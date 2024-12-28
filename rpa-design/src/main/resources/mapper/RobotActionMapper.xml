@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotActionDao">
+
+    <select id="findAll" resultType="com.seebon.rpa.entity.robot.RobotAction">
+        SELECT a.*
+        FROM `robot_action` a
+        JOIN `robot_data_dict` d ON a.`group_name` = d.`dict_name`
+        ORDER BY d.`display_order`, a.`display_order`
+    </select>
+
+</mapper>  

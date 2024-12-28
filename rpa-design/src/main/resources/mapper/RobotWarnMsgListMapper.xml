@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotWarnMsgListDao">
+
+    <resultMap id="baseMap" type="com.seebon.rpa.entity.robot.po.robotWarn.RobotWarnMsgList">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="warn_base_id" property="warnBaseId" jdbcType="VARCHAR" />
+        <result column="warn_type" property="warnType" jdbcType="VARCHAR" />
+        <result column="warnTypeName" property="warnTypeName" jdbcType="VARCHAR" />
+        <result column="send_way" property="sendWay" jdbcType="INTEGER" />
+        <result column="emp_name" property="empName" jdbcType="VARCHAR" />
+        <result column="phone_number" property="phoneNumber" jdbcType="VARCHAR" />
+        <result column="sms_content" property="smsContent" jdbcType="VARCHAR" />
+        <result column="email" property="email" jdbcType="VARCHAR" />
+        <result column="email_theme" property="emailTheme" jdbcType="VARCHAR" />
+        <result column="email_content" property="emailContent" jdbcType="LONGVARCHAR" />
+        <result column="send_status" property="sendStatus" jdbcType="INTEGER" />
+        <result column="forward_id" property="forwardId" jdbcType="INTEGER" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="send_time" property="sendTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+    <select id="getCountByParams" resultType="java.lang.Integer">
+        select count(1) from robot_warn_msg_list msg
+        <include refid="pageFilter" />
+    </select>
+    <select id="getListByParams" resultMap="baseMap">
+        select msg.* from robot_warn_msg_list msg
+        <include refid="pageFilter" />
+        order by msg.create_time desc
+        <if test="start!=null and size!=null">
+            limit ${start}, ${size}
+        </if>
+    </select>
+
+    <sql id="pageFilter">
+        <where>
+            <if test='empName!=null and empName!=""'>
+                and msg.emp_name like '%${empName}%'
+            </if>
+            <if test="sendWay!=null">
+                and msg.send_way=#{sendWay}
+            </if>
+            <if test='warnType!=null and warnType!=""'>
+                and warn_type=#{warnType}
+            </if>
+            <if test="sendStatus!=null">
+                and send_status=#{sendStatus}
+            </if>
+        </where>
+    </sql>
+
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotExecutionMonitorMapper">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotExecutionMonitor">
+        <result column="id" property="id"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="declare_num" property="declareNum"/>
+        <result column="success_num" property="successNum"/>
+        <result column="zy_num" property="zyNum"/>
+        <result column="jy_num" property="jyNum"/>
+        <result column="tj_num" property="tjNum"/>
+        <result column="bj_num" property="bjNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="sync_time" property="syncTime"/>
+    </resultMap>
+
+    <select id="selectByExecutionCode" resultMap="BaseResultMap">
+        SELECT
+            IFNULL(sum(sync =1),0) success_num,
+            IFNULL(count(1),0) declare_num,
+            sum(case d.declareType when 1 then 1 else 0 end) as zy_num,
+            sum(case d.declareType when 2 then 1 else 0 end) as jy_num,
+            sum(case d.declareType when 3 then 1 else 0 end) as tj_num,
+            sum(case d.declareType when 5 then 1 else 0 end) as bj_num
+        FROM
+             robot_execution_data d
+        where d.execution_code = #{executionCode}
+    </select>
+
+    <select id="selectUnSyncMonitor" resultMap="BaseResultMap">
+        SELECT  d.*  FROM robot_execution_monitor d where d.sync_time is null and d.end_time is not null
+    </select>
+</mapper>

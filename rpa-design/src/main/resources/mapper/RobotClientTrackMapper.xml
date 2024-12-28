@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotClientTrackDao">
+
+    <select id="selectLatest" resultType="com.seebon.rpa.entity.robot.RobotClientTrack">
+        SELECT *
+        FROM robot_client_track
+        where machine_code = #{machineCode}
+        order by id desc limit 1;
+    </select>
+
+</mapper>

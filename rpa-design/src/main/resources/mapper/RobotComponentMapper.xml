@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotComponentDao">
+
+    <select id="selectByAll" resultType="com.seebon.rpa.entity.robot.RobotComponent">
+        SELECT
+	id,
+	component,
+	file_name,
+	`version`,
+	COMMENT,
+	release_time,
+	`status`
+FROM
+	robot_component rc
+WHERE
+	SUBSTR(version,6) = (
+	SELECT
+		MAX( CAST(SUBSTR(version,6) as UNSIGNED INTEGER) )
+	FROM
+		robot_component
+	WHERE
+	component = rc.component)
+	and status = 1
+    </select>
+
+    <insert id="addComponent" parameterType="com.seebon.rpa.entity.robot.dto.design.RobotComponentVO">
+        INSERT INTO robot_component (component, `version`, file_name, comment, release_time, `status`,create_id,create_name)
+            VALUE (#{component},#{version},#{fileName},#{comment},#{releaseTime},#{status},#{createId},#{createName})
+    </insert>
+
+    <select id="selectByHistory" resultType="com.seebon.rpa.entity.robot.RobotComponent">
+        SELECT file_name, `version`, comment, release_time, `status`,create_id createId,create_name createName
+        FROM robot_component
+        WHERE `status` IN (0, 1, 2)
+          AND component = #{component}
+        order by release_time desc
+    </select>
+
+    <!--修改原组件的状态为历史版本-->
+    <update id="updateStatus">
+        update robot_component
+        set `status`=2
+        where component = #{component}
+          and `status` = 1
+    </update>
+
+    <!-- 修改原组件（停止）状态为运行中-->
+    <update id="updateStatusIsStop">
+        update robot_component
+        set `status`=1
+        where component = #{component}
+          and `status` = 0
+    </update>
+
+    <!--启用-->
+    <update id="enableStatus">
+        update robot_component
+        set status=1
+        where id = #{id}
+    </update>
+    <!--停用-->
+    <update id="stopStatus">
+        update robot_component
+        set status=0
+        where id = #{id}
+    </update>
+    <!--查找当前运行中的组件-->
+    <select id="selectVersion" resultType="com.seebon.rpa.entity.robot.dto.design.RobotComponentVO">
+        SELECT component, `version`, file_name, `status`, comment
+        FROM robot_component
+        WHERE component = #{component}
+        and status = 1
+    </select>
+    <!--查找当前组件最新版本-->
+    <select id="selectNewVersion" resultType="com.seebon.rpa.entity.robot.dto.design.RobotComponentVO">
+        SELECT component, `version`, file_name, `status`, comment
+        FROM robot_component
+        WHERE component = #{component}
+        ORDER BY
+		substring(version,6,CHAR_LENGTH(version))
+		desc
+    </select>
+    <!--查找正在运行或停止运行的组件-->
+    <select id="selectComponent" resultType="com.seebon.rpa.entity.robot.RobotComponent">
+        SELECT *
+        FROM robot_component
+        WHERE (`status` = 0 OR `status` = 1)
+          AND component = #{component}
+    </select>
+
+    <select id="selectByComment" resultType="com.seebon.rpa.entity.robot.RobotComponent">
+        select * from robot_component where comment like concat('%',#{comment},'%')
+    </select>
+</mapper>

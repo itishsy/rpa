@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotTaskScheduleDao">
+
+    <update id="updateByExecOrder" parameterType="integer">
+        update robot_task_schedule set exec_order = exec_order -1
+        where
+            exec_order > #{execOrder}
+        and task_code = ${taskCode}
+        and flow_code in
+        <foreach collection="flowCodes" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="updateStatus">
+        update robot_task_schedule set status=#{status},comment=#{comment},edit_id=#{editId},edit_time=now()
+        where task_code=#{taskCode} and flow_code in
+        <foreach collection="flowCodes" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <select id="selectSchedules" resultType="com.seebon.rpa.entity.robot.dto.RobotTaskScheduleDTO">
+        select
+        ra.app_args as appArgs,
+        a.task_code as taskCode,
+        b.client_id as clientId,
+        b.app_code as appCode,
+        b.machine_code as machineCode,
+        a.flow_code as flowCode,
+        case rf.service_item when 1 then '增员' when 2 then '减员' when 3 then '调基' when 5 then '补缴'
+        when 6 then '缴费' when 7 then '在册名单'  when 8 then '费用明细' when 9 then '政策通知' when 10 then '基数申报' else '' end as serviceItemName,
+        rf.service_item as serviceItem,
+        ras.exec_order as execOrder,
+        case when a.task_type=2 then a.exec_cycle when a.task_type=1 then
+        (select exec_cycle from robot_app_general_plan where id=a.general_plan_id) else null end as execCycle,
+        case when a.task_type=2 then a.exec_area_time when a.task_type=1 then
+        (select exec_area_time from robot_app_general_plan where id=a.general_plan_id) else null end as execAreaTime,
+        case when a.task_type=2 then a.exec_style when a.task_type=1 then
+        (select exec_style from robot_app_general_plan where id=a.general_plan_id) else null end as execStyle,
+        /*(select count(1) from robot_execution re where a.task_code=re.task_code and re.flow_code=rf.flow_code
+        and date_format(re.start_time,'%Y-%m-%d')=date_format(now(),'%Y-%m-%d')) as execCount,*/
+        a.status,a.comment,a.edit_id as editId,a.edit_time as editTime,rf.flow_type as flowType,a.task_type as taskType,rf.flow_name as flowName
+         from robot_task_schedule a
+         left join robot_app_schedule ras on a.flow_code=ras.flow_code
+        left join robot_task b on a.task_code=b.task_code
+        left join robot_app ra on ra.app_code=b.app_code
+        left join robot_flow rf on b.app_code=rf.app_code and a.flow_code=rf.flow_code
+        where a.task_code=#{taskCode} and b.app_code=#{appCode}
+        <if test="notNull!=null and notNull==1">
+            and rf.service_item is not null
+        </if>
+         and rf.flow_type=1 and ras.id is not null
+    </select>
+    <select id="selectCommonSchedules" resultType="com.seebon.rpa.entity.robot.dto.RobotTaskScheduleDTO">
+        select
+        ra.app_args as appArgs,
+        b.task_code as taskCode,
+        b.client_id as clientId,
+        b.app_code as appCode,
+        b.machine_code as machineCode,
+        a.flow_code as flowCode,
+        case rf.service_item when 1 then '增员' when 2 then '减员' when 3 then '调基' when 5 then '补缴'
+        when 6 then '缴费' when 7 then '在册名单'  when 8 then '费用明细' when 9 then '政策通知' when 10 then '基数申报' else '' end as serviceItemName,
+        rf.service_item as serviceItem,
+        a.exec_order as execOrder,
+        case when a.task_type=2 then a.exec_cycle when a.task_type=1 then
+        (select exec_cycle from robot_app_general_plan where id=a.general_plan_id) else null end as execCycle,
+        case when a.task_type=2 then a.exec_area_time when a.task_type=1 then
+        (select exec_area_time from robot_app_general_plan where id=a.general_plan_id) else null end as execAreaTime,
+        case when a.task_type=2 then a.exec_style when a.task_type=1 then
+        (select exec_style from robot_app_general_plan where id=a.general_plan_id) else null end as execStyle,
+        /*(select count(1) from robot_execution re where b.task_code=re.task_code and re.flow_code=rf.flow_code
+        and date_format(re.start_time,'%Y-%m-%d')=date_format(now(),'%Y-%m-%d')) as execCount,*/
+        1 as status,'' as comment, rf.flow_type as flowType,a.task_type as taskType,rf.flow_name as flowName
+        FROM robot_app_schedule a
+        left JOIN robot_flow rf ON rf.flow_code = a.flow_code
+        left JOIN robot_task b ON b.app_code = rf.app_code
+        left join robot_app ra on ra.app_code=b.app_code
+        WHERE
+        b.task_code = #{taskCode} and b.app_code=#{appCode}
+        <if test="notNull!=null and notNull==1">
+            and rf.service_item is not null
+        </if>
+        and rf.flow_type=1
+        <if test="prvtFlowCodes!=null and prvtFlowCodes.size()>0">
+            and a.flow_code not in
+            <foreach collection="prvtFlowCodes" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotFlowMapper">
+
+    <select id="findFlows" parameterType="String" resultType="com.seebon.rpa.entity.robot.vo.RobotFlowVO">
+        SELECT
+            f.app_code AS appCode,
+            f.flow_code AS flowCode,
+            f.flow_name AS flowName,
+            f.flow_type AS flowType,
+            f.tag_code AS tagCode,
+            f.service_item AS serviceItem,
+            f.run_support AS runSupport,
+            f.declare_system AS declareSystem,
+            f.relation_flow_code as relationFlowCode,
+            rt.template_flow_code AS templateFlowCode,
+            app.app_name appName
+        FROM
+            robot_flow f
+        LEFT JOIN robot_task t ON t.app_code = f.app_code
+        LEFT JOIN robot_flow_template rt ON rt.flow_code = f.flow_code
+        LEFT JOIN robot_app app ON app.app_code = f.app_code
+        LEFT JOIN robot_app_schedule ras ON f.flow_code = ras.flow_code
+        WHERE
+            1=1
+        AND f.flow_type = 1
+        AND f.declare_system = #{declareSystem}
+        AND t.task_code = #{taskCode}
+        <if test='tagCode!=null and tagCode!=""'>
+            and f.tag_code=#{tagCode}
+        </if>
+        <if test='tagCode==null or tagCode!="10018008"'>
+            AND ras.exec_order is not null
+        </if>
+        <if test="serviceItemList != null and serviceItemList.size != 0">
+            and f.service_item in
+            <foreach collection="serviceItemList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY
+            ras.exec_order asc
+    </select>
+</mapper>

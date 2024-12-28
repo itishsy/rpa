@@ -1,0 +1,23 @@
+{
+  "id":"1d50c17e-3116-4c15-9817-d08007a2d22d",
+  "zIndex":0,
+  "shape":"edge",
+  "attrs":{
+    "line":{
+      "stroke":"#A2B1C3",
+      "targetMarker":{
+        "name":"block",
+        "width":12,
+        "height":8
+      }
+    }
+  },
+  "source":{
+    "port":"69bab69f-30bc-49f5-afca-775edd4002a3",
+    "cell":"a28900b7-fa8b-406e-853f-da36cbed06e5"
+  },
+  "target":{
+    "port":"521a40ad-a70b-48f5-a2d9-934da4848809",
+    "cell":"cccf9ee1-3aac-4ad8-bdd0-35c070e5b822"
+  }
+}

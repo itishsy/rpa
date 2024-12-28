@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotCustomerDao">
+
+    <insert id="addCustomer" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
+            parameterType="com.seebon.rpa.entity.robot.RobotCustomer">
+        insert into robot_customer(customer_name,platform,customer_code) values (#{customerName},#{platform},#{customerCode})
+    </insert>
+
+</mapper>

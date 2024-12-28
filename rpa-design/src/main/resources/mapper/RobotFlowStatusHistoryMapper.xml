@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotFlowStatusHistoryDao">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotFlowStatusHistory">
+        <id column="id" property="id"/>
+        <result column="app_code" property="appCode"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="action_name" property="actionName"/>
+        <result column="app_status" property="appStatus"/>
+        <result column="flow_status" property="flowStatus"/>
+        <result column="on_live" property="onLive"/>
+        <result column="type" property="type"/>
+        <result column="remark" property="remark"/>
+        <result column="create_id" property="createId"/>
+        <result column="create_name" property="createName"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+</mapper>

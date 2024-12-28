@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotFlowTemplateStepMapper">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotFlowTemplateStep">
+        <id column="id" property="id"/>
+        <result column="template_flow_code" property="templateFlowCode"/>
+        <result column="template_step_code" property="templateStepCode"/>
+        <result column="main_flow_code" property="mainFlowCode"/>
+        <result column="flow_code" property="flowCode"/>
+    </resultMap>
+
+    <select id="selectByTemplateFlowCode" resultMap="BaseResultMap">
+        SELECT * FROM robot_flow_template_step WHERE template_flow_code = #{templateFlowCode} and template_step_code = #{templateStepCode} and main_flow_code = #{mainFlowCode}
+    </select>
+</mapper>
+
+
+

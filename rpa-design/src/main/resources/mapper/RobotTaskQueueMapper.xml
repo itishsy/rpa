@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotTaskQueueDao">
+    <resultMap id="RobotTaskQueue" type="com.seebon.rpa.entity.robot.vo.RobotTaskQueueVO">
+        <result column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="fix_machine_code" property="fixMachineCode"/>
+        <result column="app_code" property="appCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="declare_account" property="declareAccount"/>
+        <result column="business_type" property="businessType"/>
+        <result column="company_name" property="companyName"/>
+        <result column="declare_system" property="declareSystem"/>
+        <result column="queue_item" property="queueItem"/>
+        <result column="sort" property="sort"/>
+        <result column="sort_rule" property="sortRule"/>
+        <result column="phone_number" property="phoneNumber"/>
+        <result column="login_status" property="loginStatus"/>
+        <result column="login_type" property="loginType"/>
+        <result column="login_time" property="loginTime"/>
+        <result column="status" property="status"/>
+        <result column="type" property="type"/>
+        <result column="source" property="source"/>
+        <result column="sync" property="sync"/>
+        <result column="comment" property="comment"/>
+        <result column="pre_time" property="preTime"/>
+        <result column="pre_start_time" property="preStartTime"/>
+        <result column="pre_end_time" property="preEndTime"/>
+        <result column="pra_time" property="praTime"/>
+        <result column="pra_start_time" property="praStartTime"/>
+        <result column="pra_end_time" property="praEndTime"/>
+        <result column="create_id" property="clientId"/>
+        <result column="create_name" property="createName"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+
+        <result column="appName" property="appName"/>
+        <result column="appArgs" property="appArgs"/>
+        <collection property="taskQueueItemList" ofType="com.seebon.rpa.entity.robot.RobotTaskQueueItem">
+            <result column="item.id" property="id" />
+            <result column="service_item" property="serviceItem" />
+        </collection>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        qu.id, qu.client_id,qu.execution_code,qu.machine_code,qu.fix_machine_code,qu.app_code,qu.task_code,qu.declare_account,qu.company_name,qu.declare_system,qu.queue_item,qu.sort,qu.sort_rule,
+        qu.phone_number,qu.login_status,qu.login_type,qu.login_time,qu.status,qu.type,qu.business_type,qu.source,qu.sync,qu.comment,qu.pre_time,qu.pre_start_time,qu.pre_end_time,qu.pra_time,
+        qu.pra_start_time,qu.pra_end_time,qu.update_time,qu.create_time
+    </sql>
+
+    <select id="selectByParams" resultMap="RobotTaskQueue">
+        SELECT
+            <include refid="Base_Column_List"/>,
+            app.app_name AS appName,
+            app.app_args AS appArgs
+        FROM
+            robot_task_queue qu
+        LEFT JOIN robot_app app ON app.app_code = qu.app_code
+        <where>
+            <if test='clientId!=null and clientId!=""'>
+                and qu.client_id=#{clientId}
+            </if>
+            <if test='machineCode!=null and machineCode!=""'>
+                and qu.machine_code=#{machineCode}
+            </if>
+            <if test='fixMachineCode!=null and fixMachineCode!=""'>
+                and qu.fix_machine_code like concat('%',#{fixMachineCode},'%')
+            </if>
+            <if test="status!=null">
+                and qu.status=#{status}
+            </if>
+            <if test="statusList!=null and statusList.size()>0">
+                and qu.status in
+                <foreach collection="statusList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test='startTime!=null and startTime!=""'>
+                and DATE_FORMAT(qu.create_time,'%Y-%m-%d')&gt;=#{startTime}
+            </if>
+            <if test='endTime!=null and endTime!=""'>
+                and DATE_FORMAT(qu.create_time,'%Y-%m-%d')&lt;=#{endTime}
+            </if>
+            <if test='declareAccount!=null and declareAccount!=""'>
+                and (qu.declare_account like concat('%',#{declareAccount},'%') or qu.company_name like concat('%',#{declareAccount},'%'))
+            </if>
+            <if test='comment!=null and comment!=""'>
+                and qu.comment like concat('%',#{comment},'%')
+            </if>
+            <if test='loginType!=null and loginType!=""'>
+                and qu.login_type like concat('%',#{loginType},'%')
+            </if>
+            <if test='addrId!=null and addrId!=""'>
+                and app.app_args like '%"addrId":"${addrId}"%'
+            </if>
+            <if test='declareAccounts!=null and declareAccounts!=""'>
+                and qu.declare_account=#{declareAccounts}
+            </if>
+            <if test='taskCode!=null and taskCode!=""'>
+                and qu.task_code=#{taskCode}
+            </if>
+            <if test='businessType!=null and businessType!=""'>
+                and qu.business_type=#{businessType}
+            </if>
+            <if test='queueItem!=null and queueItem!=""'>
+                and qu.queue_item=#{queueItem}
+            </if>
+            <if test='phoneNumber!=null and phoneNumber!=""'>
+                and qu.phone_number like concat('%',#{phoneNumber},'%')
+            </if>
+            <if test='declareSystem!=null and declareSystem!=""'>
+                and qu.declare_system=#{declareSystem}
+            </if>
+            <if test='source!=null and source!=""'>
+                and qu.source=#{source}
+            </if>
+        </where>
+        <if test="sidx!=null and sort!=null">
+            order by ${sidx} ${sort}
+        </if>
+        <if test="sidx==null and sort==null">
+            order by qu.status asc,qu.sort asc,qu.pra_end_time desc
+        </if>
+        <if test='limitPageSize!=null and limitPageSize!=""'>
+            limit #{limitPageSize}
+        </if>
+    </select>
+
+    <select id="findByParams" resultMap="RobotTaskQueue">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_task_queue qu
+        <where>
+            <if test="clientId!=null">
+                and qu.client_id=#{clientId}
+            </if>
+            <if test="status!=null">
+                and qu.status=#{status}
+            </if>
+            <if test="sort!=null">
+                and qu.sort>=#{sort}
+            </if>
+        </where>
+        order by qu.sort asc
+    </select>
+
+    <select id="selectQueueByClientId" resultMap="RobotTaskQueue">
+        SELECT
+            <include refid="Base_Column_List"/>,
+            app.app_name AS appName,
+            app.app_args AS appArgs,
+            item.id as 'item.id',
+            item.service_item
+        FROM
+            robot_task_queue qu
+        LEFT JOIN robot_app app ON app.app_code = qu.app_code
+        LEFT JOIN robot_task_queue_item item ON item.execution_code = qu.execution_code
+        where
+            1=1
+        and qu.client_id = #{clientId}
+        <if test="statusList!=null and statusList.size()>0">
+            and qu.STATUS in
+            <foreach collection="statusList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getAvgPraTime" resultType="Long">
+        SELECT
+            AVG( qu.pra_time )
+        FROM
+            robot_task_queue qu
+        where
+            qu.STATUS =4
+        and qu.pra_time !=0
+        and qu.pra_time is not null
+        and qu.client_id = #{clientId}
+        and qu.app_code = #{appCode}
+        and qu.queue_item = #{queueItem}
+        and qu.declare_system = #{declareSystem}
+        order by qu.id desc
+        limit 30
+    </select>
+
+    <select id="getSortByClientId" resultMap="RobotTaskQueue">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_task_queue qu
+        where
+            qu.STATUS =2
+        and qu.client_id = #{clientId}
+        order by qu.sort asc
+    </select>
+
+    <select id="findQueueFirst" resultMap="RobotTaskQueue">
+        SELECT
+            <include refid="Base_Column_List"/>,
+            app.app_name AS appName,
+            app.app_args AS appArgs
+        FROM
+            robot_task_queue qu
+        LEFT JOIN robot_app app ON app.app_code = qu.app_code
+        where
+            qu.STATUS in (1,2)
+        and qu.client_id = #{clientId}
+        order by qu.sort asc
+    </select>
+
+    <update id="batchUpdateSort" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" separator=";">
+            UPDATE robot_task_queue SET sort = #{item.sort}, update_time = now() WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+    <update id="batchUpdatePreTime" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" separator=";">
+            UPDATE robot_task_queue SET pre_start_time = #{item.preStartTime}, pre_end_time = #{item.preEndTime}, update_time = now() WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+    <update id="batchUpdatePraTime" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" separator=";">
+            UPDATE robot_task_queue SET pra_time = #{item.praTime}, pra_start_time = #{item.praStartTime}, pra_end_time = #{item.praEndTime},
+            status = #{item.status}, comment = #{item.comment}, update_time = now() WHERE client_id = #{item.clientId} and execution_code = #{item.executionCode}
+        </foreach>
+    </update>
+
+    <update id="updateStatus">
+        UPDATE robot_task_queue SET status = #{status}, comment = #{comment}, update_time = now() WHERE id = #{id}
+    </update>
+
+    <update id="updateLoginStatus">
+        UPDATE robot_task_queue SET login_status = #{loginStatus}, login_time = now(), update_time = now() WHERE execution_code = #{executionCode} and task_code = #{taskCode}
+    </update>
+
+    <update id="updateStatusByMachineCode">
+        UPDATE robot_task_queue SET status = #{status},comment = #{comment},update_time = now() WHERE machine_code = #{machineCode} and status = 1
+    </update>
+
+    <update id="updateById">
+        UPDATE robot_task_queue SET status = #{status},login_status = #{loginStatus},machine_code = #{machineCode},pra_start_time = now(),update_time = now() WHERE id = #{id}
+    </update>
+</mapper>

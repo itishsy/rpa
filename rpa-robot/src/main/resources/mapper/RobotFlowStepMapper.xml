@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotFlowStepMapper">
+
+    <resultMap id="flowStepMap" type="com.seebon.rpa.entity.robot.RobotFlowStep">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="flow_code" jdbcType="VARCHAR" property="flowCode"/>
+        <result column="group_code" jdbcType="VARCHAR" property="groupCode"/>
+        <result column="step_code" jdbcType="VARCHAR" property="stepCode"/>
+        <result column="step_name" jdbcType="VARCHAR" property="stepName"/>
+        <result column="action_code" jdbcType="VARCHAR" property="actionCode"/>
+        <result column="target_args" jdbcType="VARCHAR" property="targetArgs"/>
+        <result column="action_args" jdbcType="VARCHAR" property="actionArgs"/>
+        <result column="number" jdbcType="INTEGER" property="number"/>
+        <result column="failed_retry" jdbcType="INTEGER" property="failedRetry"/>
+        <result column="failed_strategy" jdbcType="INTEGER" property="failedStrategy"/>
+        <result column="failed_skip_to" jdbcType="VARCHAR" property="failedSkipTo"/>
+        <result column="skip_to" jdbcType="VARCHAR" property="skipTo"/>
+        <result column="false_skip_to" jdbcType="VARCHAR" property="falseSkipTo"/>
+        <result column="skip_condition" jdbcType="VARCHAR" property="skipCondition"/>
+        <result column="wait_before" jdbcType="INTEGER" property="waitBefore"/>
+        <result column="wait_after" jdbcType="INTEGER" property="waitAfter"/>
+        <result column="timeout" jdbcType="INTEGER" property="timeout"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, flow_code, group_code, step_code, step_name, action_code,target_args,action_args,number,failed_retry,
+        failed_strategy,failed_skip_to,skip_to,false_skip_to,skip_condition,wait_before,wait_after,timeout
+    </sql>
+
+    <select id="findSteps" parameterType="String" resultMap="flowStepMap">
+        SELECT * FROM robot_flow_step WHERE flow_code = #{flowCode} and group_code is null
+    </select>
+
+    <select id="listByGroupCode" resultMap="flowStepMap">
+        SELECT * FROM robot_flow_step WHERE flow_code = #{flowCode} and group_code = #{groupCode}
+    </select>
+
+    <select id="getByTargetArgs" resultMap="flowStepMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_flow_step
+        WHERE
+              action_code = #{actionCode}
+          AND target_args like concat('%',#{targetArgs},'%')
+          AND flow_code = #{flowCode}
+          AND status = 1
+          limit 1
+    </select>
+
+    <select id="getByActionArgs" resultMap="flowStepMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        robot_flow_step
+        WHERE
+            action_code = #{actionCode}
+        AND action_args like concat('%',#{actionArgs},'%')
+        AND flow_code = #{flowCode}
+        AND status = 1
+        limit 1
+    </select>
+
+    <select id="findSubSteps" parameterType="String" resultMap="flowStepMap">
+        SELECT *
+        FROM robot_flow_step
+        WHERE flow_code = (
+            SELECT f1.`flow_code`
+            FROM `robot_flow` f1
+            WHERE f1.`app_code` = (SELECT f2.`app_code` FROM `robot_flow` f2 WHERE f2.`flow_code` =  #{flowCode} )
+            AND f1.`flow_name` = #{flowName}
+        )
+        AND group_code is NULL
+    </select>
+
+    <select id="findSubRelationFlowCode" parameterType="String" resultType="String">
+        SELECT f1.`relation_flow_code`
+        FROM `robot_flow` f1
+        WHERE f1.`app_code` = (SELECT f2.`app_code` FROM `robot_flow` f2 WHERE f2.`flow_code` =  #{flowCode} )
+          AND f1.`flow_name` = #{flowName}
+    </select>
+
+    <select id="findTemplateSteps" parameterType="String" resultMap="flowStepMap">
+        SELECT *
+        FROM robot_flow_step
+        WHERE flow_code = (
+            SELECT f1.`flow_code`
+            FROM `robot_flow` f1
+            WHERE f1.`app_code` is null
+              AND f1.template_type = 1
+              AND f1.`flow_name` = #{flowName}
+        )
+        AND group_code is NULL
+    </select>
+</mapper>

@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.OperationMonitorDao">
+
+
+    <select id="findByOperation" resultType="com.seebon.rpa.entity.robot.dto.design.OperationMonitorVo">
+      SELECT
+        sum(
+        IF
+        ( a.warn_type = '10017001', 1, 0 )) AS rpaFailCount,
+        sum(
+        IF
+        ( a.warn_type = '10017002', 1, 0 )) AS siteFailCount,
+        sum(
+        IF
+        ( a.warn_type = '10017003', 1, 0 )) AS loginFailCount,
+        sum(
+        IF
+        ( a.warn_type = '10017004', 1, 0 )) AS robotHeartBeatCount,
+        sum(
+        IF
+        ( a.warn_type = '10017005', 1, 0 )) AS robotUpgradeFailCount,
+        sum(
+        IF
+        ( a.warn_type = '10017006', 1, 0 )) AS certWaitUpgradeCount,
+        a.client_name clientName,
+        a.client_Id clientId,
+        a.report_time reportTime,
+        a.machine_code machineCode
+    FROM
+        robot_operation_monitor_detail a
+        <where>
+            handle_status=0
+            <if test="reportStartTime != null and reportStartTime != '' ">
+                and a.report_time &gt;= #{reportStartTime}
+            </if>
+            <if test="reportEndTime != null and reportEndTime != '' ">
+                and a.report_time &lt;= #{reportEndTime}
+            </if>
+            <if test="clientName != null and clientName != ''">
+                and a.client_name=#{clientName}
+            </if>
+            <if test="machineCode != null and machineCode != ''">
+                and a.machine_code=#{machineCode}
+            </if>
+        </where>
+    GROUP BY
+        a.client_name,
+        a.client_Id,
+        a.report_time,
+        a.machine_code
+        ORDER BY a.report_time desc, sum(
+        IF
+        ( a.warn_type = '10017001', 1, 0 ))+sum(
+        IF
+        ( a.warn_type = '10017002', 1, 0 ))+sum(
+        IF
+        ( a.warn_type = '10017003', 1, 0 ))+sum(
+        IF
+        ( a.warn_type = '10017004', 1, 0 ))+sum(
+        IF
+        ( a.warn_type = '10017005', 1, 0 ))+sum(
+        IF
+        ( a.warn_type = '10017006', 1, 0 ))
+        desc
+    </select>
+    <select id="findDetailByOperation" resultType="com.seebon.rpa.entity.robot.vo.design.RobotOperationMonitorDetailVO">
+           SELECT
+        GROUP_CONCAT(a.id) groupId,
+        a.client_id clientId,
+        client_name clientName,
+        a.machine_code machineCode,
+        addr_name addrName,
+        service_name serviceName,
+        account_number accountNumber,
+        count(*) warnCount,
+        handle_status handleStatus,
+        b.DICT_NAME handleType,
+        c.DICT_NAME warnType,
+        c.dict_code warnCode,
+        handle_remark handleRemark,
+        handle_link handleLink,
+        handle_date handleDate,
+        report_time reportTime,
+        d.message_topic messageTopic,
+        d.email_content messageContent,
+        a.app_code appCode,
+        a.task_code taskCode
+    FROM
+        robot_operation_monitor_detail a
+        LEFT JOIN robot_data_dict b ON a.handle_type = b.DICT_CODE
+        AND b.dict_key = '10016'
+        LEFT JOIN robot_data_dict c ON a.warn_type = c.DICT_CODE
+        AND c.dict_key = '10017'
+        left join robot_operation_message_config d on a.warn_type=d.warn_type
+        AND d.message_status =1 and d.send_way like '%0%'
+        <where>
+            <if test="clientId != null ">
+                and a.client_id = #{clientId}
+            </if>
+            <if test="machineCode != null and machineCode != ''">
+                and a.machine_code=#{machineCode}
+            </if>
+            <if test="reportTime != null and reportTime != ''">
+                and a.report_time=#{reportTime}
+            </if>
+            <if test="reportStartTime != null and reportStartTime != '' ">
+                and a.report_time &gt;= #{reportStartTime}
+            </if>
+            <if test="reportEndTime != null and reportEndTime != '' ">
+                and a.report_time &lt;= #{reportEndTime}
+            </if>
+            <if test="clientName != null and clientName != ''">
+                and a.client_name=#{clientName}
+            </if>
+            <if test="handleStatus != null and handleStatus != ''">
+                and a.handle_status=#{handleStatus}
+            </if>
+            <if test="warnTypeCode != null and warnTypeCode != '' ">
+                and a.warn_type = #{warnTypeCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and (a.addr_name like concat('%',#{keyword},'%')
+                or  a.service_name like concat('%',#{keyword},'%')
+                or  a.account_number like concat('%',#{keyword},'%') )
+
+            </if>
+        </where>
+        group by a.warn_type,report_time,a.client_id,a.machine_code,addr_name,service_name,account_number
+
+    </select>
+
+    <select id="selectCountByParams" resultType="integer">
+        select count(1) from (select count(1) from robot_operation_monitor_detail a
+        INNER JOIN (select client_id from robot_client group by client_id) d on d.client_id = a.client_id
+        left join robot_flow flow on a.flow_code=flow.flow_code
+        <include refid="pageFilter"/>
+        group by a.client_id,a.app_code,a.task_code,a.warn_type,a.account_number,a.flow_code,a.flow_name,
+        a.addr_name,report_time,a.machine_code,a.handle_status,a.handle_type)t
+    </select>
+
+    <select id="selectPageListByParams" resultType="com.seebon.rpa.entity.robot.vo.design.RobotOperationMonitorDetailVO">
+      select
+        a.client_id as clientId,
+        a.app_code as appCode,
+        a.task_code as taskCode,
+        a.client_name as clientName,
+        a.machine_code as machineCode,
+        a.addr_name  as addrName,
+        a.service_name as serviceName,
+        a.account_number as accountNumber,
+        a.flow_code as flowCode,
+        a.flow_name as flowName,
+        a.report_time as reportTime,
+        a.handle_status as handleStatus,
+        case a.handle_status when 1 then '已办结' when 0 then '未处理' else '' end as handleStatusName,
+        a.handle_type as handleType,
+        b.dict_name as handleTypeName,
+        c.dict_name as warnType,
+        a.warn_type  as warnCode,
+        a.handle_remark as handleRemark,
+        a.handle_link as handleLink,
+        case when flow.service_item=1 then '增员' when flow.service_item=2 then '减员' when flow.service_item=3 then '调基'
+        when flow.service_item=5 then '补缴' when flow.service_item=6 then '缴费' when flow.service_item=7 then '名册名单'
+        when flow.service_item=8 then '费用明细'  when flow.service_item=9 then '政策通知' when flow.service_item=10 then '基数申报' else '' end as serviceItemName,
+        count(1) as warnCount,
+        max(a.id) as id,
+        min(a.create_time) as minCreateTime
+       from robot_operation_monitor_detail a
+      INNER JOIN (select client_id from robot_client group by client_id) d on d.client_id = a.client_id
+      LEFT JOIN robot_data_dict b ON a.handle_type = b.dict_code
+      AND b.dict_key = '10016'
+      LEFT JOIN robot_data_dict c ON a.warn_type = c.dict_code
+        left join robot_flow flow on a.flow_code=flow.flow_code
+      AND c.dict_key = '10017'
+        <include refid="pageFilter"/>
+        group by a.client_id,a.app_code,a.task_code,a.warn_type,a.account_number,a.flow_code,a.flow_name,
+        a.addr_name,report_time,a.machine_code,a.handle_status,a.handle_type
+        order by max(a.id) desc
+        <if test="start!=null and size!=null">
+            limit ${start},${size}
+        </if>
+    </select>
+
+    <sql id="pageFilter">
+        <where>
+            and a.client_id is not null and a.client_name is not null
+            <if test="cooperationCustIdList != null and cooperationCustIdList.size() > 0 ">
+                and a.client_id in
+                <foreach collection="cooperationCustIdList" open="(" close=")" separator="," item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="clientId != null ">
+                and a.client_id = #{clientId}
+            </if>
+            <if test="handleStatus != null and handleStatus != ''">
+                and a.handle_status=#{handleStatus}
+            </if>
+            <if test="warnTypeCode != null and warnTypeCode != '' ">
+                and a.warn_type = #{warnTypeCode}
+            </if>
+            <if test="reportStartTime != null and reportStartTime != '' ">
+                and a.report_time &gt;= #{reportStartTime}
+            </if>
+            <if test="reportEndTime != null and reportEndTime != '' ">
+                and a.report_time &lt;= #{reportEndTime}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and (a.addr_name like concat('%',#{keyword},'%')
+                or concat(ifnull(a.service_name,''), case when flow.service_item=1 then '-增员-' when flow.service_item=2 then '-减员-' when flow.service_item=3 then '-调基-'
+                when flow.service_item=5 then '-补缴-' when flow.service_item=6 then '-缴费-' when flow.service_item=7 then '-名册名单-'
+                when flow.service_item=8 then '-费用明细-' else '-' end, a.flow_name)  like concat('%',#{keyword},'%')
+                or  a.account_number like concat('%',#{keyword},'%') )
+            </if>
+        </where>
+    </sql>
+
+    <update id="updateFinish" >
+        update robot_operation_monitor_detail set
+        handle_status=#{handleStatus},
+        handle_type=#{handleType},
+        handle_remark=#{handleRemark},
+        handle_link=#{handleLink},
+        handle_date=now(),
+        update_time=now()
+        <where>
+            client_id=#{detailVO.clientId}
+            and handle_status=#{detailVO.handleStatus}
+            and warn_type=#{detailVO.warnCode}
+            <if test='detailVO.machineCode!=null and detailVO.machineCode!=""'>
+                and machine_code=#{detailVO.machineCode}
+            </if>
+            and report_time=#{detailVO.reportTime}
+            <if test='detailVO.addrName!=null and detailVO.addrName!=""'>
+                and addr_name=#{detailVO.addrName}
+            </if>
+            <if test='detailVO.accountNumber!=null and detailVO.accountNumber!=""'>
+                and account_number=#{detailVO.accountNumber}
+            </if>
+            <if test='detailVO.flowCode!=null and detailVO.flowCode!=""'>
+                and flow_code=#{detailVO.flowCode}
+            </if>
+        </where>
+    </update>
+
+    <select id="selectOperationCount" resultType="java.lang.Integer">
+        select count(t.counts) from
+      (select  count(*) counts  from robot_operation_monitor_detail
+        where report_time=#{today} and handle_status=0 GROUP BY client_name,client_Id,machine_code) t
+    </select>
+    <select id="errorInfoList" resultType="com.seebon.rpa.entity.robot.dto.design.RobotOperationExcelVo">
+       SELECT
+            machine_code machineCode,
+            task_name taskName,
+            addr_name addrName,
+            service_name serviceName,
+            flow_name flowName,
+            report_time reportTime,
+            min( create_time ) firstWarnTime,
+            max( create_time ) newWarnTime,
+            b.dict_name failReason,
+            GROUP_CONCAT(a.error_result separator ';') failCode,
+            count(*) warnCount
+        FROM
+            robot_operation_monitor_detail a
+            LEFT JOIN robot_data_dict b ON a.warn_type = b.DICT_CODE
+            AND b.dict_key = '10017'
+
+        WHERE
+            warn_type IN ( '10017001', '10017003' )
+        <if test="reportStartTime != null and reportStartTime != '' ">
+            and a.report_time &gt;= #{reportStartTime}
+        </if>
+        <if test="reportEndTime != null and reportEndTime != '' ">
+            and a.report_time &lt;= #{reportEndTime}
+        </if>
+        GROUP BY
+            report_time,
+            machine_code,
+            task_code,
+            flow_code
+
+    </select>
+
+    <update id="updateExceptionMessage">
+         update robot_operation_monitor_detail
+         set handle_type=#{handleType},handle_remark=#{handleRemark},
+         handle_link=#{handleLink},update_time=now(),handle_status=1,handle_date=now()
+         where id in
+        <foreach collection="ids" item="id" index="index" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateWarnType">
+        update robot_operation_monitor_detail set
+        warn_type=#{warnType},
+        update_time=now()
+        <where>
+            client_id=#{detailVO.clientId}
+            and handle_status=#{detailVO.handleStatus}
+            and warn_type=#{detailVO.warnCode}
+            and machine_code=#{detailVO.machineCode}
+            and report_time=#{detailVO.reportTime}
+            <if test='detailVO.addrName!=null and detailVO.addrName!=""'>
+                and addr_name=#{detailVO.addrName}
+            </if>
+            <if test='detailVO.accountNumber!=null and detailVO.accountNumber!=""'>
+                and account_number=#{detailVO.accountNumber}
+            </if>
+            <if test='detailVO.flowCode!=null and detailVO.flowCode!=""'>
+                and flow_code=#{detailVO.flowCode}
+            </if>
+        </where>
+    </update>
+
+    <insert id="insertOperationDetail">
+        INSERT INTO robot_operation_monitor_detail (client_id, client_name,machine_code,addr_name,service_name,account_number
+        ,handle_status,warn_type,report_time,execution_id,app_code,create_time,error_result,app_name,task_code,task_name,flow_code,flow_name)
+        VALUES
+        <foreach collection ="operationMonitorDetailVoList" item="item" separator =",">
+            (#{item.clientId}, #{item.clientName},#{item.machineCode},#{item.addrName},#{item.serviceName},
+            #{item.accountNumber},#{item.handleStatus},#{item.warnType},#{item.reportTime},#{item.executionId},
+            #{item.appCode},#{item.createTime},#{item.errorResult},#{item.appName},#{item.taskCode},#{item.taskName},#{item.flowCode},#{item.flowName})
+        </foreach>
+
+    </insert>
+
+</mapper>

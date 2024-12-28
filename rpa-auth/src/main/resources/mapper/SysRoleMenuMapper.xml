@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.SysRoleMenuDao">
+
+    <update id="saveRoleMenu">
+        insert into sys_role_menu (role_id, menu_id)
+        select #{roleId},sm.id from sys_menu sm where
+        sm.menu_type=2 and sm.module_code in
+        <foreach collection="moduleCodes" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="removeCustOtherMunu">
+        delete from sys_role_menu
+        where role_id in
+        <foreach collection="roleIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and menu_id not in
+        (select id from sys_menu where menu_type=2 and module_code in
+        <foreach collection="moduleCodes" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+    </update>
+    <select id="selectCustRoleIds" resultType="java.lang.Integer">
+        select distinct sr.id from sys_role_menu a
+        left join sys_menu b on a.menu_id=b.id and b.menu_type=2
+        left join sys_role sr on a.role_id=sr.id
+        where sr.role_type=2 and sr.main_role=1 and b.module_code=#{moduleCode}
+    </select>
+
+
+</mapper>

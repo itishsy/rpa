@@ -1,0 +1,88 @@
+{
+  "id": "cccf9ee1-3aac-4ad8-bdd0-35c070e5b822",
+  "view": "vue-shape-view",
+  "shape": "vue-shape",
+  "component": "extra-node",
+  "data": {
+    "quote": false,
+    "flowCode": "b6a295be013d487c9934d1b61e93b595",
+    "nodeState": "0",
+    "flowName": "增员申报初始化",
+    "flowId": 280,
+    "desc": "增员申报初始化"
+  },
+  "zIndex": 2,
+  "position": {
+    "x": 303,
+    "y": 139
+  },
+  "size": {
+    "width": 260,
+    "height": 40
+  },
+  "ports": {
+    "groups": {
+      "top": {
+        "position": "top",
+        "attrs": {
+          "circle": {
+            "strokeWidth": 1,
+            "r": 4,
+            "style": {
+              "visibility": "hidden"
+            },
+            "fill": "#fff",
+            "magnet": true,
+            "stroke": "#5F95FF"
+          }
+        }
+      },
+      "left": {
+        "position": "left",
+        "attrs": {
+          "circle": {
+            "strokeWidth": 1,
+            "r": 4,
+            "style": {
+              "visibility": "hidden"
+            },
+            "fill": "#fff",
+            "magnet": true,
+            "stroke": "#5F95FF"
+          }
+        }
+      },
+      "bottom": {
+        "position": "bottom",
+        "attrs": {
+          "circle": {
+            "strokeWidth": 1,
+            "r": 4,
+            "style": {
+              "visibility": "hidden"
+            },
+            "fill": "#fff",
+            "magnet": true,
+            "stroke": "#5F95FF"
+          }
+        }
+      },
+      "right": {
+        "position": "right",
+        "attrs": {
+          "circle": {
+            "strokeWidth": 1,
+            "r": 4,
+            "style": {
+              "visibility": "hidden"
+            },
+            "fill": "#fff",
+            "magnet": true,
+            "stroke": "#5F95FF"
+          }
+        }
+      }
+    },
+    "items": []
+  }
+}

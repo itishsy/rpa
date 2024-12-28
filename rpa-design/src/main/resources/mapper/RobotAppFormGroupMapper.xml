@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotAppFormGroupDao">
+
+
+
+    <insert id="addFormGroupWithIdentity" useGeneratedKeys="true" keyColumn="id" keyProperty="id"
+            parameterType="com.seebon.rpa.entity.robot.RobotAppFormGroup">
+        insert into robot_app_form_group(app_code,form_id,group_id,is_delete) values (#{appCode},#{formId},#{groupId},#{isDelete})
+    </insert>
+
+</mapper>

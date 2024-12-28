@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotWarnMessageDao">
+
+
+    <select id="findByMessage" resultType="com.seebon.rpa.entity.robot.po.design.RobotOperationMessageConfig">
+        select a.id, message_type messageType,warn_type warnType,warn_name warnName,response_grade responseGrade,message_topic messageTopic,
+        message_strategy messageStrategy,send_way sendWay,sms_content smsContent,a.person_type_id personTypeId,
+        box_content boxContent,email_content emailContent,message_status messageStatus,b.person_type_name personGroup
+        from robot_operation_message_config a left join robot_warn_person_type b on a.person_type_id=b.id
+        <where>
+            <if test="messageStatus != null and messageStatus.size != 0">
+                and  message_status in
+                <foreach collection="messageStatus" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test='id!=null and id!=""'>
+                and a.id=#{id}
+            </if>
+            <if test="searchText != null and searchText != '' ">
+                and (message_type like concat('%',#{searchText},'%')
+                or message_strategy like concat('%',#{searchText},'%')
+                or warn_name like concat('%',#{searchText},'%'))
+            </if>
+
+        </where>
+    </select>
+</mapper>

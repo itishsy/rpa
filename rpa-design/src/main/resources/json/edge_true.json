@@ -1,0 +1,33 @@
+{
+  "id": "b401a93f-b1b2-4ed0-b519-b2821f57be99",
+  "data": {
+    "quote": false,
+    "nodeState": "0",
+    "nodeLogic": "1",
+    "flowName": "是",
+    "desc": "是"
+  },
+  "zIndex": 0,
+  "labels": [
+    "是"
+  ],
+  "shape": "edge",
+  "attrs": {
+    "line": {
+      "stroke": "#A2B1C3",
+      "targetMarker": {
+        "name": "block",
+        "width": 12,
+        "height": 8
+      }
+    }
+  },
+  "source": {
+    "port": "ed3a59f0-cf02-42c3-908a-06379c861c04",
+    "cell": "41b76cbf-f99d-4795-825c-53f71415441e"
+  },
+  "target": {
+    "port": "521a40ad-a70b-48f5-a2d9-934da4848809",
+    "cell": "c823e93a-c103-48d2-82b8-cc4e830d21f9"
+  }
+}

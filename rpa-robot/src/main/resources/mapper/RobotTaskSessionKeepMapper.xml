@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotTaskSessionKeepMapper">
+    <resultMap id="RobotTaskSessionKeep" type="com.seebon.rpa.entity.robot.vo.RobotTaskSessionKeepVO">
+        <result column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="app_code" property="appCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="declare_system" property="declareSystem"/>
+        <result column="comment" property="comment"/>
+        <result column="port" property="port"/>
+        <result column="share_port" property="sharePort"/>
+        <result column="status" property="status"/>
+        <result column="login_status" property="loginStatus"/>
+        <result column="url" property="url"/>
+        <result column="xpath" property="xpath"/>
+        <result column="lose_xpath" property="loseXpath"/>
+        <result column="retry_num" property="retryNum"/>
+        <result column="file_id" property="fileId"/>
+        <result column="sync" property="sync"/>
+        <result column="sync_machine_code" property="syncMachineCode"/>
+        <result column="sync_time" property="syncTime"/>
+        <result column="max_keep_time" property="maxKeepTime"/>
+        <result column="start_keep_time" property="startKeepTime"/>
+        <result column="end_keep_time" property="endKeepTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+
+        <result column="app_name" property="appName"/>
+        <result column="orgName" property="orgName"/>
+        <result column="accountNumber" property="accountNumber"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ra.id, ra.client_id, ra.machine_code, ra.app_code, ra.task_code,ra.declare_system, ra.comment, ra.port,ra.share_port, ra.status,ra.login_status,ra.url,ra.xpath,ra.lose_xpath,
+        ra.retry_num,ra.file_id,ra.sync,ra.sync_machine_code,ra.sync_time,ra.max_keep_time,ra.start_keep_time,ra.end_keep_time, ra.create_time, ra.update_time
+    </sql>
+
+    <select id="selectLoginStatus" resultMap="RobotTaskSessionKeep">
+        SELECT
+            <include refid="Base_Column_List"/>,
+            app.app_name,
+            (select args_value from robot_task_args rta where rta.task_code=ra.task_code and rta.args_key IN ( 'socialNumber', 'accfundNumber' )) as accountNumber,
+            (select args_value from robot_task_args rta where rta.task_code=ra.task_code and rta.args_key='companyName') as orgName
+        FROM
+            robot_task_session_keep ra
+        LEFT JOIN robot_app app ON app.app_code = ra.app_code
+        order by ra.start_keep_time desc
+    </select>
+
+    <select id="selectTaskCode" resultMap="RobotTaskSessionKeep">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_task_session_keep ra
+        where ra.app_code = #{appCode} and ra.task_code= #{taskCode} and ra.declare_system = #{declareSystem}
+    </select>
+
+    <select id="selectSharePortKeep" resultMap="RobotTaskSessionKeep">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_task_session_keep ra
+        where ra.share_port = #{sharePort} and status = 3 limit 1
+    </select>
+
+    <delete id="cleanByTaskCode">
+        delete from robot_task_session_keep where app_code = #{appCode} and task_code = #{taskCode} and declare_system = #{declareSystem}
+    </delete>
+
+    <update id="updateStatus">
+        update robot_task_session_keep set status = #{status},comment = #{comment},login_status=0,update_time = now() where id = #{id}
+    </update>
+
+    <update id="updateStatusSharePort">
+        update robot_task_session_keep set status = #{status},comment = #{comment},login_status=0,update_time = now() where share_port = #{sharePort}
+    </update>
+
+    <update id="startKeep">
+        update robot_task_session_keep set status = #{status},login_status=1,update_time = now(),start_keep_time = now(),end_keep_time = null,file_id = null where id = #{id}
+    </update>
+
+    <update id="startKeepSharePort">
+        update robot_task_session_keep set status = #{status},login_status=0,update_time = now(),start_keep_time = now(),end_keep_time = null,file_id = null where share_port = #{sharePort} and id != #{id}
+    </update>
+
+    <update id="keepFail">
+        update robot_task_session_keep set status = #{status},login_status=0,update_time = now(),end_keep_time = now(),file_id = #{fileId} where id = #{id}
+    </update>
+
+    <update id="keepFailSharePort">
+        update robot_task_session_keep set status = #{status},login_status=0,update_time = now(),end_keep_time = now(),file_id = #{fileId} where share_port = #{sharePort}
+    </update>
+
+    <update id="keepSuccess">
+        update robot_task_session_keep set status = #{status},login_status=1,update_time = now(),end_keep_time = null,file_id = null where id = #{id}
+    </update>
+
+    <update id="keepSuccessSharePort">
+        update robot_task_session_keep set status = #{status},login_status=0,update_time = now(),end_keep_time = null,file_id = null where share_port = #{sharePort} and id != #{id}
+    </update>
+
+    <update id="retryLogin">
+        update robot_task_session_keep set login_status=1,update_time = now() where login_status = 0 and id = #{id}
+    </update>
+</mapper>

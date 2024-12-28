@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotExecutionMapper">
+
+    <resultMap id="executionWithDetails" type="com.seebon.rpa.entity.robot.dto.RobotExecutionDTO">
+        <result column="id" property="id"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="error" property="error"/>
+        <result column="sync_time" property="syncTime"/>
+        <collection property="details" ofType="com.seebon.rpa.entity.robot.RobotExecutionDetail">
+            <result column="id1" property="id"/>
+            <result column="execution_code1" property="executionCode"/>
+            <result column="flow_code1" property="flowCode"/>
+            <result column="step_code1" property="stepCode"/>
+            <result column="step_name1" property="stepName"/>
+            <result column="start_time1" property="startTime"/>
+            <result column="end_time1" property="endTime"/>
+            <result column="status1" property="status"/>
+            <result column="error1" property="error"/>
+            <result column="error_stack1" property="errorStack"/>
+            <result column="step_data1" property="stepData"/>
+            <result column="sync_time1" property="syncTime"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectUnSyncExecution" resultMap="executionWithDetails">
+        SELECT
+            e.`id`,
+            e.`execution_code`,
+            e.`client_id`,
+            e.`machine_code`,
+            e.`task_code`,
+            e.`flow_code`,
+            e.`start_time`,
+            e.`end_time`,
+            e.`status`,
+            e.`error`,
+            e.`sync_time`,
+            ed.`id` AS id1,
+            ed.`execution_code` AS execution_code1,
+            ed.`flow_code` AS flow_code1,
+            ed.`step_code` AS step_code1,
+            ed.`step_name` AS step_name1,
+            ed.`start_time` AS start_time1,
+            ed.`end_time` AS end_time1,
+            ed.`status` AS status1,
+            ed.`error` AS error1,
+            ed.`error_stack` AS error_stack1,
+            ed.`step_data` AS step_data1,
+            ed.`sync_time`  AS sync_time1
+        FROM
+            `robot_execution`  e
+        inner JOIN `robot_execution_detail` ed ON e.`execution_code` = ed.`execution_code` and e.flow_code = ed.flow_code
+        WHERE ed.`sync_time` IS NULL
+        LIMIT 500
+    </select>
+
+    <update id="updateSyncStatus">
+        update robot_execution set sync_time = now() where sync_time is null and id = #{id}
+    </update>
+
+    <select id="selectSyncExecution" resultType="integer">
+        SELECT
+            e.`id`
+        FROM
+            `robot_execution`  e
+        LEFT JOIN `robot_execution_detail` ed ON e.`execution_code` = ed.`execution_code`  AND e.flow_code = ed.flow_code
+        WHERE
+            ed.id IS NULL
+        and e.sync_time &lt;= #{syncTime}
+        LIMIT 500
+    </select>
+</mapper>

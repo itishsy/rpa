@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotExecutionMonitorDao">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotExecutionMonitor">
+        <result column="id" property="id"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="declare_num" property="declareNum"/>
+        <result column="success_num" property="successNum"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="sync_time" property="syncTime"/>
+    </resultMap>
+
+    <select id="selectByTaskCode" resultMap="BaseResultMap">
+        SELECT
+            d.id,
+            d.execution_code,
+            d.client_id,
+            d.machine_code,
+            d.task_code,
+            d.declare_num,
+            d.success_num,
+            d.start_time,
+            d.end_time,
+            d.sync_time,
+            co.command_max_time
+        FROM
+            robot_execution_monitor d
+        LEFT JOIN (
+                SELECT
+                    com.task_code,
+                    com.machine_code,
+                    max( com.sync_time ) command_max_time
+                FROM
+                    robot_command com
+                WHERE
+                    com.command != 'deleteTask'
+                GROUP BY
+                    com.task_code,
+                    com.machine_code
+        ) co ON co.task_code = d.task_code AND co.machine_code = d.machine_code
+        LEFT JOIN robot_task ta ON ta.task_code = d.task_code AND ta.machine_code = d.machine_code
+        WHERE
+            d.task_code = #{taskCode}
+          AND d.machine_code = #{machineCode}
+          AND d.start_time >= co.command_max_time
+          AND d.start_time >= ta.enable_time
+        ORDER BY d.id DESC
+        LIMIT 5
+    </select>
+</mapper>

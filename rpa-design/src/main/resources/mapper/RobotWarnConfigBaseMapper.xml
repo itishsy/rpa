@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotWarnConfigBaseDao">
+
+    <resultMap id="baseMap" type="com.seebon.rpa.entity.robot.po.robotWarn.RobotWarnConfigBase">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="type" property="type" jdbcType="VARCHAR" />
+        <result column="type_name" property="typeName" jdbcType="VARCHAR" />
+        <result column="send_sms" property="sendSms" jdbcType="INTEGER" />
+        <result column="sms_content" property="smsContent" jdbcType="VARCHAR" />
+        <result column="send_email" property="sendEmail" jdbcType="INTEGER" />
+        <result column="email_theme" property="emailTheme" jdbcType="VARCHAR" />
+        <result column="email_content" property="emailContent" jdbcType="VARCHAR" />
+        <result column="cron" property="cron" jdbcType="VARCHAR" />
+        <result column="cron_comment" property="cronComment" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="range_time" property="rangeTime" jdbcType="INTEGER" />
+        <result column="create_id" property="createId" jdbcType="INTEGER" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="update_id" property="updateId" jdbcType="INTEGER" />
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+    <select id="selectCountByParams" resultType="java.lang.Integer">
+        select count(1) from robot_warn_config_base a
+        <include refid="pageFilter" />
+    </select>
+
+    <resultMap id="pageMap" type="com.seebon.rpa.entity.robot.vo.robotWarn.RobotWarnConfigBaseVO" extends="baseMap">
+        <collection property="recipients" ofType="com.seebon.rpa.entity.robot.po.robotWarn.RobotWarnRecipient">
+            <result column="recipientId" property="id" />
+            <result column="empName" property="empName" />
+            <result column="phoneNumber" property="phoneNumber" />
+            <result column="email" property="email" />
+        </collection>
+    </resultMap>
+
+    <select id="selectListByParams" resultMap="pageMap">
+        select a.*, b.id as recipientId,b.emp_name as empName,b.phone_number as phoneNumber,
+        b.email from
+        (select a.* from robot_warn_config_base a
+            <include refid="pageFilter" />
+            <if test="start!=null and size!=null">
+                limit ${start},${size}
+            </if>
+        )a
+        left join robot_warn_recipient b on a.id=b.warn_base_id
+        order by a.id
+    </select>
+
+    <sql id="pageFilter">
+        <where>
+            <if test='type!=null and type!=""'>
+                and a.type=#{type}
+            </if>
+            <if test='status!=null and status!=""'>
+                and a.status=#{status}
+            </if>
+            <if test='searchText!=null and searchText !=""'>
+                and (a.type_name like '%${searchText}%' or EXISTS (select 1 from robot_warn_recipient b where a.id=b.warn_base_id and b.emp_name like '%${searchText}%')
+                or EXISTS (select 1 from robot_warn_recipient b where a.id=b.warn_base_id and b.phone_number like '%${searchText}%')
+                or EXISTS (select 1 from robot_warn_recipient b where a.id=b.warn_base_id and b.email like '%${searchText}%')
+                )
+            </if>
+        </where>
+    </sql>
+
+</mapper>

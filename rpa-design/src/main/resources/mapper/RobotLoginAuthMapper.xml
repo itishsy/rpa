@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotLoginAuthDao">
+
+    <resultMap id="baseResultMap" type="com.seebon.rpa.entity.robot.RobotLoginAuth">
+        <id property="id" column="id" />
+        <result property="clientId" column="client_id" />
+        <result property="executionCode" column="execution_code" />
+        <result property="machineCode" column="machine_code" />
+        <result property="taskCode" column="task_code" />
+        <result property="declareAccount" column="declare_account" />
+        <result property="declareSystem" column="declare_system" />
+        <result property="queueItem" column="queue_item" />
+        <result property="loginType" column="login_type" />
+        <result property="phoneNumber" column="phone_number" />
+        <result property="loginTime" column="login_time" />
+        <result property="processStatus" column="process_status" />
+        <result property="loginStatus" column="login_status" />
+        <result property="source" column="source" />
+        <result property="createTime" column="create_time" />
+        <result property="createId" column="create_id" />
+        <result property="updateTime" column="update_time" />
+        <result property="updateId" column="update_id" />
+        <result property="comment" column="comment" />
+        <result property="businessType" column="business_type" />
+        <result property="isDelete" column="is_delete" />
+    </resultMap>
+
+    <resultMap id="voResultMap" type="com.seebon.rpa.entity.robot.vo.RobotLoginAuthVO" extends="baseResultMap">
+        <result column="companyName" property="companyName"/>
+        <result column="accountNumber" property="accountNumber"/>
+        <result column="accountNumber" property="accountNumber"/>
+        <result column="appArgs" property="appArgs"/>
+        <result column="appCode" property="appCode"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        rla.id, rla.client_id, rla.execution_code, rla.machine_code, rla.task_code, rla.declare_account, rla.declare_system,
+        rla.queue_item, rla.login_type, rla.phone_number, rla.login_time, rla.process_status, rla.login_status, rla.source,
+        rla.create_time, rla.create_id, rla.update_time, rla.update_id, rla.comment, rla.business_type, rla.is_delete
+    </sql>
+    <update id="updateLoginStatus">
+        update robot_login_auth set login_status = #{loginStatus} ,process_status = if(#{loginStatus} = 1,1,process_status)
+        where login_status = if(#{loginStatus} = 2,1,0)
+        and client_id = #{clientId}
+        and task_code = #{taskCode}
+        and declare_system = #{declareSystem}
+    </update>
+
+    <select id="selectVOByParams" resultMap="voResultMap">
+        select
+            <include refid="Base_Column_List"/>,
+            ifnull(sk.machine_code,rla.machine_code) as machine_code,
+            rta.args_value AS accountNumber,
+            rta2.args_value AS companyName,
+            ta.app_code AS appCode,
+            app.app_args AS appArgs
+        FROM robot_login_auth rla
+        LEFT JOIN robot_task ta ON rla.task_code = ta.task_code
+        LEFT JOIN robot_app app ON app.app_code = ta.app_code
+        LEFT JOIN robot_task_session_keep sk ON sk.client_id = rla.client_id and sk.task_code = rla.task_code and sk.declare_system = rla.declare_system
+        LEFT JOIN robot_task_args rta ON rla.task_code = rta.task_code AND rta.args_key IN ( 'socialNumber', 'accfundNumber' )
+        LEFT JOIN robot_task_args rta2 ON rla.task_code = rta2.task_code AND rta2.args_key IN ('companyName')
+        <include refid="pageWhere"/>
+        order by rla.process_status asc, rla.id desc
+        <if test="start != null and size != null">
+            limit #{start},#{size}
+        </if>
+    </select>
+    <select id="selectCountByParams" resultType="java.lang.Integer">
+        select
+            count(1)
+        FROM robot_login_auth rla
+        LEFT JOIN robot_task ta ON rla.task_code = ta.task_code
+        LEFT JOIN robot_app app ON app.app_code = ta.app_code
+        LEFT JOIN robot_task_args rta ON rla.task_code = rta.task_code AND rta.args_key IN ( 'socialNumber', 'accfundNumber' )
+        LEFT JOIN robot_task_args rta2 ON rla.task_code = rta2.task_code AND rta2.args_key IN ('companyName')
+        <include refid="pageWhere"/>
+    </select>
+    <select id="selectShareLoginAuth" resultType="com.seebon.rpa.entity.robot.RobotTaskSessionKeep">
+        SELECT
+            *
+        FROM
+            robot_task_session_keep sk1
+        WHERE
+            share_port = ( SELECT share_port FROM robot_task_session_keep sk WHERE sk.client_id = '' AND sk.declare_system = '' AND sk.task_code = '' LIMIT 1 )
+            AND sk1.share_port IS NOT NULL
+            AND sk1.status = 3
+        limit 1
+    </select>
+
+    <sql id="pageWhere">
+        <where>
+            rla.is_delete = 0
+            <if test="id != null">
+                and rla.id = #{id}
+            </if>
+            <if test='executionCode != null and executionCode != ""'>
+                and rla.execution_code = #{executionCode}
+            </if>
+            <if test='taskCode != null and taskCode != ""'>
+                and rla.task_code = #{taskCode}
+            </if>
+            <if test='declareSystem!=null and declareSystem!=""'>
+                and rla.declare_system = #{declareSystem}
+            </if>
+            <if test='queueItem!=null '>
+                and rla.queue_item = #{queueItem}
+            </if>
+            <if test='loginStatus!=null '>
+                and rla.login_status = #{loginStatus}
+            </if>
+            <if test='clientId!=null and clientId!=""'>
+                and rla.client_id=#{clientId}
+            </if>
+            <if test='phoneNumber != null and phoneNumber != ""'>
+                and rla.phone_number = #{phoneNumber}
+            </if>
+            <if test='machineCode!=null and machineCode!=""'>
+                and rla.machine_code=#{machineCode}
+            </if>
+            <if test="processStatus!=null">
+                and rla.process_status = #{processStatus}
+            </if>
+            <if test="processStatusList!=null and processStatusList.size() > 0">
+                and rla.process_status in
+                <foreach collection="processStatusList" separator="," close=")" open="(" item="item">
+                    ${item}
+                </foreach>
+            </if>
+            <if test='declareAccount!=null and declareAccount!=""'>
+                and rla.declare_account like concat('%',#{declareAccount},'%')
+            </if>
+            <if test="userDeclareAccountList != null and userDeclareAccountList.size() > 0" >
+                and rla.declare_account in
+                <foreach collection="userDeclareAccountList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test='addrId!=null and addrId!=""'>
+                and app.app_args like '%"addrId":"${addrId}"%'
+            </if>
+            <if test='addrName!=null and addrName!=""'>
+                and app.app_args like '%"addrName":"${addrName}"%'
+            </if>
+        </where>
+    </sql>
+
+</mapper>

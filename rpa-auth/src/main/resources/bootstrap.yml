@@ -1,0 +1,12 @@
+spring:
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.0.90:8848
+        file-extension: yml
+        prefix: rpa-auth
+        namespace: testing
+        username: testing
+        password: dev123

@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotExecutionDao">
+
+    <resultMap id="clientExecution" type="com.seebon.rpa.entity.robot.RobotExecution">
+        <result column="id" property="id"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="error" property="error"/>
+    </resultMap>
+
+    <resultMap id="clientExecutionDetail" type="com.seebon.rpa.entity.robot.RobotExecutionDetail">
+        <result column="id" property="id"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="step_code" property="stepCode"/>
+        <result column="step_name" property="stepName"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="error" property="error"/>
+    </resultMap>
+
+    <resultMap id="clientExecutionDetailVO" type="com.seebon.rpa.entity.robot.dto.design.RobotClientExecutionDetailVO">
+        <result column="id" property="id" />
+        <result column="execution_code" property="executionCode"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="step_code" property="stepCode"/>
+        <result column="step_name" property="stepName"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="error" property="error"/>
+        <result column="flow_type" property="flowType" />
+        <collection property="robotExecutionFileInfos" ofType="com.seebon.rpa.entity.robot.dto.design.RobotExecutionFileInfo">
+            <result column="fileInfoId" property="id"/>
+            <result column="file_name" property="fileName"/>
+            <result column="file_full_path" property="fileFullPath"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="clientExecutionVO" type="com.seebon.rpa.entity.robot.dto.design.RobotClientExecutionVO">
+        <result column="task_code" property="taskCode"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="error" property="error"/>
+        <collection property="executionDetailVOS" resultMap="clientExecutionDetailVO"/>
+    </resultMap>
+
+    <resultMap id="ExecutionVO" type="com.seebon.rpa.entity.robot.dto.design.ClientExecutionVO">
+
+        <result column="business_type" property="businessType"/>
+        <result column="flow_name" property="flowName"/>
+        <result column="start_time" property="startTime"/>
+        <result column="error" property="error"/>
+        <result column="execution_code" property="executionCode"/>
+    </resultMap>
+
+    <resultMap id="ClientAppVO1" type="com.seebon.rpa.entity.robot.dto.design.RobotClientAppVo">
+        <id column="id" property="id" />
+        <result property="clientId" column="client_id" />
+        <result property="appCode" column="app_code" />
+        <result property="appName" column="app_name" />
+        <result property="version" column="version" />
+        <result property="status" column="status" />
+        <result property="customerName" column="name" />
+        <result property="platform" column="platform" />
+        <result property="lastExecutionTime" column="lastExecutionTime" />
+        <result property="createTime" column="create_time" />
+        <collection property="robotTaskVOS" ofType="com.seebon.rpa.entity.robot.vo.design.RobotTaskVO1">
+            <id property="id" column="robotTaskId" />
+            <result property="appCode" column="app_code" />
+            <result property="taskCode" column="task_code" />
+            <result property="taskName" column="task_name" />
+            <result property="schedule" column="schedule" />
+            <result property="editName" column="edit_name" />
+            <result property="updateTime" column="update_time" />
+            <result property="execCycle" column="exec_cycle" />
+            <result property="execAreaTime" column="exec_area_time" />
+            <result property="execStyle" column="exec_style" />
+            <result property="taskType" column="task_type" />
+            <result property="executionCode" column="execution_code" />
+            <result property="executionResult" column="executionResult" />
+            <result property="executionTime" column="executionTime" />
+            <result property="successNumber" column="successNumber" />
+            <result property="failureNumber" column="failureNumber" />
+            <result property="dataNumber" column="dataNumber" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="ExcelVO" type="com.seebon.rpa.entity.robot.dto.design.RobotClientAppVo">
+        <id column="id" property="id" />
+        <result column="customer_name" property="customerName" />
+        <result column="app_name" property="appName" />
+        <result column="taskName" property="taskName" />
+        <result column="create_time" property="createTime" />
+        <result column="state" property="state" />
+        <result column="platform" property="platform" />
+        <result column="concatLastExecutionTime" property="concatLastExecutionTime" />
+    </resultMap>
+
+
+    <!--判断execution是否存在-->
+    <select id="existExecution" resultMap="clientExecution">
+        SELECT *
+        FROM robot_execution
+        WHERE execution_code = #{executionCode}
+    </select>
+    <!--添加executionDetail-->
+    <insert id="insertExecutionDetail" parameterType="com.seebon.rpa.entity.robot.dto.design.RobotClientExecutionDetailVO">
+        INSERT INTO robot_execution_detail
+        (execution_code, flow_code, step_code, step_name, start_time, end_time, `status`, error)
+            VALUE (#{executionCode},#{flowCode},#{stepCode},#{stepName},#{startTime},#{endTime},#{status},#{error})
+    </insert>
+    <!--删除executionDetail-->
+    <delete id="deleteExecutionDetail" parameterType="string">
+        DELETE
+        rced
+        FROM robot_execution_detail AS rced
+        LEFT JOIN robot_client_execution AS rce ON rced.execution_code=rce.execution_code
+        WHERE rce.execution_code=#{executionCode}
+    </delete>
+    <!-- 修改execution-->
+    <update id="updateExecution" parameterType="com.seebon.rpa.entity.robot.dto.design.RobotClientExecutionVO">
+        UPDATE robot_execution
+        SET robot_code=#{robotCode},
+            execution_code=#{executionCode},
+            task_code=#{taskCode},
+            flow_code=#{flowCode},
+            start_time=#{startTime},
+            end_time=#{endTime},
+            `status`=#{status},
+            error=#{error}
+        WHERE execution_code = #{executionCode}
+    </update>
+    <!--添加execution-->
+    <insert id="insertExecution" parameterType="com.seebon.rpa.entity.robot.dto.design.RobotClientExecutionVO">
+        INSERT INTO robot_execution
+        (execution_code, task_code, flow_code, start_time, end_time, `status`, error)
+            VALUE (#{executionCode},#{taskCode},#{flowCode},#{startTime},#{endTime},#{status},#{error})
+    </insert>
+    <!--execution列表-->
+    <select id="appExecutions" resultMap="ExecutionVO">
+        SELECT
+               rf.flow_name,
+               rce.start_time,
+               rce.status,
+               rca.CREATE_TIME,
+
+               rce.execution_code
+        FROM robot_execution AS rce
+                 LEFT JOIN robot_client AS rc ON rc.machine_code = rce.machine_code AND rc.status = 1
+                 LEFT JOIN robot_client_app AS rca ON rca.client_id = rc.client_id
+                 LEFT JOIN robot_flow AS rf ON rca.app_code = rf.app_code
+
+        WHERE rf.app_code = #{appCode}
+
+    </select>
+
+    <!-- 添加客户应用选择客户 -->
+    <select id="selectCustomer" resultType="com.seebon.rpa.entity.robot.RobotCustomer">
+        select id,customer_name,platform from robot_customer
+    </select>
+    <!--执行明细-->
+    <select id="executionsDetails" resultMap="clientExecutionDetailVO">
+        SELECT
+            rced.id,
+            rced.execution_code,
+            rced.flow_code,
+            rced.step_code,
+            rced.step_name,
+            rced.start_time,
+            rced.end_time,
+            rced.STATUS,
+            rced.error,
+            rf.flow_type,
+            fileInfo.id AS fileInfoId,
+            fileInfo.file_name,
+            fileInfo.file_full_path
+        FROM
+            robot_execution_detail AS rced
+        LEFT JOIN robot_execution_file_info fileInfo ON rced.execution_code = fileInfo.execution_code AND rced.flow_code = fileInfo.flow_code AND rced.step_code = fileInfo.step_code
+        INNER JOIN robot_flow rf ON rf.flow_code = rced.flow_code
+        WHERE
+            rced.execution_code = #{executionCode}
+        ORDER BY
+            rced.id ASC
+    </select>
+
+
+    <select id="selectTask" resultMap="ClientAppVO1">
+        select rca.id,rca.app_code,rca.APP_NAME,rca.CREATE_TIME,rt.id as robotTaskId,rt.edit_name,rt.task_name,rt.task_code,rt.schedule,rt.update_time,
+        rt.exec_cycle,rt.exec_area_time,rt.exec_style,rc.name,rc.platform,rt.task_type,(SELECT MAX(start_time) FROM `robot_execution` where task_code = rt.task_code) as lastExecutionTime,re.status as executionResult,re.execution_code,
+        re.start_time as executionTime
+        from ROBOT_CLIENT_APP rca
+        left join robot_task rt on rca.APP_CODE = rt.app_code
+				left join robot_execution re on rt.task_code = re.task_code
+        left join rpa.customer_base rc on rc.id = rca.CLIENT_ID
+        where
+        rca.client_id = #{clientId}
+        and
+        rca.APP_CODE = #{appCode}
+    </select>
+
+    <!-- 应用概况 -->
+    <select id="selectAppBasic" resultMap="ClientAppVO1">
+        SELECT
+	rca.id,
+	rca.app_code,
+	rca.APP_NAME,
+	rca.CREATE_TIME,
+	rt.task_name,
+	rt.task_code,
+	( SELECT count(*) FROM robot_execution WHERE task_code = rt.task_code AND STATUS = 1 ) AS successNumber,
+	( SELECT count(*) FROM robot_execution WHERE task_code = rt.task_code AND STATUS = 0 ) AS failureNumber
+FROM
+	ROBOT_CLIENT_APP rca
+	LEFT JOIN robot_task rt ON rca.APP_CODE = rt.app_code and rca.client_id = rt.client_id and rca.machine_code=rt.machine_code
+WHERE
+        rca.client_id = #{clientId}
+        and
+        rca.APP_CODE = #{appCode}
+    </select>
+
+    <select id="selectDataNumber" resultType="integer">
+        select count(*) from robot_execution_data where execution_code in(select execution_code from robot_execution where task_code = #{taskCode})
+    </select>
+
+    <select id="selectDataNumberByMachineCode" resultType="integer">
+        select count(*) from robot_execution_data where execution_code in(select execution_code from robot_execution where machine_code = #{machineCode})
+    </select>
+
+    <!-- 最新执行时间 -->
+    <select id="selectLastExecTime" resultType="java.util.Date">
+        SELECT
+	max( start_time )
+FROM
+	robot_execution re
+	JOIN robot_task rt ON re.task_code = rt.task_code
+	JOIN robot_client_app rca ON rt.app_code = rca.app_code
+WHERE
+	rca.app_code = #{appCode}
+	and
+	rca.client_id = #{clientId}
+    </select>
+
+    <!--执行计划-->
+    <select id="selectExec" resultMap="ClientAppVO1">
+        SELECT
+	rca.id,
+	rca.client_id,
+	rca.app_code,
+	rca.APP_NAME,
+	rca.CREATE_TIME,
+	rt.id AS robotTaskId,
+	rt.edit_name,
+	rt.task_name,
+	rt.task_code,
+	rt.SCHEDULE,
+	rt.update_time,
+	rt.exec_cycle,
+	rt.exec_area_time,
+	rt.exec_style,
+
+
+	rt.task_type,(
+	SELECT
+		max( start_time )
+	FROM
+		robot_execution re
+	WHERE
+		re.task_code IN ( SELECT task_code FROM robot_task WHERE app_code = #{appCode} AND client_id = #{clientId} )
+	) AS lastExecutionTime
+FROM
+	ROBOT_CLIENT_APP rca
+	LEFT JOIN robot_task rt ON rca.APP_CODE = rt.app_code and rca.client_id = rt.client_id
+
+WHERE
+        rca.client_id = #{clientId}
+        and
+        rca.APP_CODE = #{appCode}
+        and
+        rca.machine_code = #{machineCode}
+    </select>
+
+    <!-- 客户应用列表导出 -->
+    <select id="selectClientAppExcel" resultMap="ExcelVO">
+        SELECT
+        rc.name as customer_name,
+        rc.platform,
+        rca.app_code,
+        rca.app_name,
+        temp.taskName,
+        (
+        SELECT
+        max( start_time )
+        FROM
+        robot_execution
+        WHERE
+        task_code IN ( SELECT task_code FROM robot_task rt WHERE rt.app_code = rca.app_code )) AS concatLastExecutionTime,
+        rca.create_time,
+        rca.STATUS,
+        CASE
+        rca.STATUS
+        WHEN 1 THEN
+        '启用'
+        WHEN 0 THEN
+        '未登录'
+        WHEN 2 THEN
+        '停用'
+        END AS state
+        FROM
+        robot_client_app rca
+        LEFT JOIN ( SELECT app_code, GROUP_CONCAT( task_name ) AS taskName FROM robot_task GROUP BY app_code ) AS temp ON rca.app_code = temp.app_code
+        LEFT JOIN rpa.customer_base rc ON rca.client_id = rc.id
+	<where>
+        <if test="keyword != null and keyword != ''">
+            and (rca.app_name like concat('%',#{keyword},'%') or rc.name like concat('%',#{keyword},'%'))
+        </if>
+        <if test="status != null and status.size != 0">
+            and rca.status in
+            <foreach collection="status" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </where>
+    </select>
+
+    <!-- 执行查询列表 -->
+    <select id="selectExecutionList" resultMap="ClientAppVO1">
+        SELECT
+	rca.id,
+	rca.app_code,
+	rca.APP_NAME,
+
+	temp2.*
+FROM
+	robot_client_app rca
+	LEFT JOIN (
+	SELECT
+		temp1.*,
+		rt.id AS robotTaskId,
+		rt.task_name,
+		rt.client_id,
+		rt.app_code
+	FROM
+		robot_task rt
+		INNER JOIN (
+		SELECT
+			re.STATUS AS executionResult,
+			re.execution_code,
+			re.task_code,
+			re.start_time AS executionTime
+		FROM
+			robot_execution re
+		<where>
+            <if test="startTime != null and endTime != null">
+                re.start_time BETWEEN #{startTime}
+                AND #{endTime}
+            </if>
+        </where>
+
+		) AS temp1 ON rt.task_code = temp1.task_code
+	) AS temp2 ON rca.app_code = temp2.app_code and rca.client_id = temp2.client_id
+
+WHERE rca.app_code = #{appCode}
+        and rca.client_id = #{clientId}
+        and rca.machine_code = #{machineCode}
+        ORDER BY
+        temp2.executionTime DESC
+    </select>
+
+    <!--执行计划编辑页面-->
+    <select id="selectTaskEdit" resultType="com.seebon.rpa.entity.robot.RobotTask">
+        select task_name,exec_cycle,exec_area_time,exec_style,task_type
+        from robot_task where id = #{id}
+    </select>
+
+    <!-- 查询最近运行时间 -->
+    <select id="selectLatelyTime" resultType="string">
+        select max(START_TIME) from robot_execution
+        where
+        task_code in
+        <foreach collection="taskCodes" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getRobotExecErrorList" resultType="map">
+        select e.app_name as appName,b.customer_name as custName,c.task_name as taskName,d.flow_name as flowName,count(1) as count,b.id clientId,e.app_args appArgs,e.app_code appCode,a.machine_code machineCode from robot_execution a
+        left join robot_customer b on a.client_id=b.id
+        left join robot_task c on a.task_code=c.task_code
+        left join robot_flow d on a.flow_code=d.flow_code
+        left join robot_app e on d.app_code=e.app_code
+        where a.`status`=0 and TimeStampDiff(MINUTE,a.end_time,now())&lt;=#{rangeTime}
+        group by e.app_name ,b.customer_name,c.task_name,d.flow_name
+    </select>
+
+    <select id="selectLastExecutionTimeByAppCode" resultType="java.util.Date">
+        select max(start_time) from (select start_time from robot_execution re left join
+        robot_task rt on re.task_code = rt.task_code
+        where rt.app_code = #{appCode}) as temp
+    </select>
+    <select id="selectDetailByExecutionCode" resultType="com.seebon.rpa.entity.robot.dto.design.OperationRequestVo">
+        select a.client_id clientId,b.args_value accountNumber,
+        c.machine_code machineCode,
+        e.app_args appArgs
+        FROM
+        robot_execution a
+        LEFT JOIN robot_task_args b ON a.task_code = b.task_code
+        LEFT JOIN robot_client c ON c.client_id = a.client_id
+        LEFT JOIN robot_client_app d ON d.machine_code = c.machine_code
+        LEFT JOIN robot_app e ON e.app_code = d.app_code
+        where a.execution_code in
+        <foreach collection="executionCodes" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and (b.args_key='socialNumber' or b.args_key='accfundNumber')
+        GROUP BY
+        execution_code
+
+    </select>
+
+
+</mapper>

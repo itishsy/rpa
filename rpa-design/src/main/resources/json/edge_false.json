@@ -1,0 +1,33 @@
+{
+  "id": "28a4563a-a660-4202-9ebc-0d0a6439b9ff",
+  "data": {
+    "quote": false,
+    "nodeState": "0",
+    "nodeLogic": "0",
+    "flowName": "否",
+    "desc": "否"
+  },
+  "zIndex": 0,
+  "labels": [
+    "否"
+  ],
+  "shape": "edge",
+  "attrs": {
+    "line": {
+      "stroke": "#A2B1C3",
+      "targetMarker": {
+        "name": "block",
+        "width": 12,
+        "height": 8
+      }
+    }
+  },
+  "source": {
+    "port": "ed3a59f0-cf02-42c3-908a-06379c861c04",
+    "cell": "41b76cbf-f99d-4795-825c-53f71415441e"
+  },
+  "target": {
+    "port": "ad1517a1-ea35-428e-8ad1-a4e90c6161b9",
+    "cell": "3eb9c611-5e04-4271-bb2e-ab69a4514312"
+  }
+}

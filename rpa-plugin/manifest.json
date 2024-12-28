@@ -1,0 +1,44 @@
+{
+	"manifest_version": 2,
+	"name": "see-robot",
+	"version": "1.0.0",
+	"description": "仕邦机器人谷歌浏览器插件",
+	"icons": {
+		"16": "image/icon.png",
+		"48": "image/icon.png",
+		"128": "image/icon.png"
+	},
+	"background": {
+		"scripts": ["js/background.js"],
+		"persistent": true
+	},
+	"browser_action": {
+		"default_icon": "image/icon.png",
+		"default_title": "仕邦机器人谷歌浏览器插件",
+		"default_popup": "popup.html"
+	},
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": ["js/jquery-1.8.3.js", "js/content-script.js"],
+			"css": ["css/custom.css"],
+			"run_at": "document_start"
+		}
+	],
+	"permissions": [
+		"activeTab",
+		"contextMenus",
+		"tabs",
+		"notifications",
+		"webRequest",
+		"webRequestBlocking",
+		"storage",
+		"http://*/*",
+		"https://*/*"
+	],
+	"web_accessible_resources": ["js/inject.js"],
+	"homepage_url": "https://rpa.seebon.com/",
+	"omnibox": {
+		"keyword" : "go"
+	}
+}

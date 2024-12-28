@@ -1,0 +1,95 @@
+{
+  "id": "41b76cbf-f99d-4795-825c-53f71415441e",
+  "data": {
+    "quote": false,
+    "nodeState": "0",
+    "flowName": "是否有数据",
+    "desc": "是否有数据"
+  },
+  "position": {
+    "x": 380,
+    "y": 240
+  },
+  "size": {
+    "width": 106,
+    "height": 46
+  },
+  "attrs": {
+    "text": {
+      "text": "判断节点"
+    },
+    "body": {
+      "refPoints": "0,10 10,0 20,10 10,20"
+    },
+    "label": {
+      "text": "是否有数据"
+    }
+  },
+  "visible": true,
+  "shape": "custom-polygon",
+  "ports": {
+    "groups": {
+      "top": {
+        "position": "top",
+        "attrs": {
+          "circle": {
+            "r": 4,
+            "magnet": true,
+            "stroke": "#5F95FF",
+            "strokeWidth": 1,
+            "fill": "#fff",
+            "style": {
+              "visibility": "hidden"
+            }
+          }
+        }
+      },
+      "right": {
+        "position": "right",
+        "attrs": {
+          "circle": {
+            "r": 4,
+            "magnet": true,
+            "stroke": "#5F95FF",
+            "strokeWidth": 1,
+            "fill": "#fff",
+            "style": {
+              "visibility": "hidden"
+            }
+          }
+        }
+      },
+      "bottom": {
+        "position": "bottom",
+        "attrs": {
+          "circle": {
+            "r": 4,
+            "magnet": true,
+            "stroke": "#5F95FF",
+            "strokeWidth": 1,
+            "fill": "#fff",
+            "style": {
+              "visibility": "hidden"
+            }
+          }
+        }
+      },
+      "left": {
+        "position": "left",
+        "attrs": {
+          "circle": {
+            "r": 4,
+            "magnet": true,
+            "stroke": "#5F95FF",
+            "strokeWidth": 1,
+            "fill": "#fff",
+            "style": {
+              "visibility": "hidden"
+            }
+          }
+        }
+      }
+    },
+    "items": []
+  }
+}

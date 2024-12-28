@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotAppCaMapper">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotAppCa">
+        <id property="id" column="id"/>
+        <result property="appCode" column="app_code"/>
+        <result property="declareSystem" column="declare_system"/>
+        <result property="fileName" column="file_name"/>
+        <result property="declareAccount" column="declare_account"/>
+        <result property="syncMachineCode" column="sync_machine_code"/>
+        <result property="syncTime" column="sync_time"/>
+        <result property="createId" column="create_id"/>
+        <result property="createName" column="create_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ke.id, ke.app_code, ke.declare_system,ke.file_name,ke.declare_account,ke.sync_machine_code,ke.sync_time,ke.create_id,ke.create_name,ke.update_time,ke.create_time
+    </sql>
+
+    <delete id="cleanByAppCode">
+        delete from robot_app_ca where app_code = #{appCode} and declare_system = #{declareSystem}
+    </delete>
+</mapper>

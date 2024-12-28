@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.SysMenuDao">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.auth.po.SysMenu">
+        <id column="id" property="id"></id>
+        <result column="name" property="name" />
+        <result column="url" property="url" />
+        <result column="parent_id" property="parentId" />
+        <result column="sort" property="sort" />
+        <result column="level" property="level" />
+        <result column="icon_class" property="iconClass" />
+        <result column="status" property="status" />
+        <result column="comment" property="comment" />
+        <result column="menu_type" property="menuType" />
+        <result column="module_code" property="moduleCode" />
+        <result column="module_name" property="moduleName" />
+        <result column="create_id" property="createId" />
+        <result column="create_time" property="createTime" />
+        <result column="update_id" property="updateId" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <select id="getMenu" resultType="com.seebon.rpa.entity.auth.po.SysMenu">
+        SELECT sm.*
+        FROM sys_menu sm
+        WHERE EXISTS (
+		SELECT 1 FROM sys_role_menu srm1
+                 JOIN sys_user_role sur1 ON sur1.role_id = srm1.`role_id`
+                 WHERE srm1.`menu_id` = 0 AND sur1.`user_id` = #{id}
+        ) OR sm.id IN (
+		SELECT srm1.menu_id FROM sys_role_menu srm1
+                 JOIN sys_user_role sur1 ON sur1.role_id = srm1.`role_id`
+                 join sys_role sr on sur1.role_id=sr.id
+                 WHERE sur1.`user_id` = #{id} and sr.status=1
+        )
+    </select>
+
+    <select id="getRoleResources" resultType="com.seebon.rpa.entity.auth.vo.RoleResourceVO">
+        select
+        DISTINCT sr.id,sr.id as perId,sr.name,sr.url,sr.sort,sr.create_id as createId,sr.icon_class as iconClass,sr.parent_id as parentId,
+        sr.create_time as createTime,sr.update_id as updateId,sr.update_time as updateTime,
+        case when rr.menu_id is null then 0 else 1 end as checked, 1 as perType
+        from
+        sys_role r
+        left join sys_menu sr on r.role_type=sr.menu_type
+        LEFT JOIN sys_role_menu rr ON r.id = rr.role_id and sr.id=rr.menu_id
+        where r.id=#{roleId} and sr.id is not null
+        UNION ALL
+        select DISTINCT sb.id, concat(sb.menu_id, "_", sb.id) as perId,sb.name,sb.url,sb.id as sort,null as create_id,null as iconClass, sb.menu_id as parentId,
+        null as createTime,null as updateId,null as updateTime,
+        case when rb.id is null then 0 else 1 end as checked, 2 as perType
+        from sys_role r
+        LEFT JOIN sys_button sb on 1=1
+        LEFT JOIN sys_role_button rb ON r.id = rb.role_id and sb.id=rb.button_id
+        where r.id=#{roleId} and sb.id is not null
+    </select>
+
+    <select id="getMaxSortNumber" resultType="integer">
+        select max(r.sort) from sys_menu r where r.parent_id=#{parentId}
+    </select>
+</mapper>  

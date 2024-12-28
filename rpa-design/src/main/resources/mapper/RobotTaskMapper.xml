@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotTaskDao">
+
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotClientApp">
+        <result column="id" property="id" jdbcType="INTEGER" />
+        <result column="client_id" property="clientId" jdbcType="INTEGER" />
+        <result column="machine_code" property="machineCode" jdbcType="VARCHAR" />
+        <result column="app_code" property="appCode" jdbcType="VARCHAR" />
+        <result column="app_name" property="appName" jdbcType="VARCHAR" />
+        <result column="version" property="version" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" javaType="java.util.Date"  />
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" javaType="java.util.Date"  />
+    </resultMap>
+
+    <resultMap id="RobotVO" type="com.seebon.rpa.entity.robot.vo.RobotVO">
+        <result column="robot_code" property="robotCode" />
+        <result column="robot_name" property="robotName" />
+        <collection property="robotClientAppVOS" ofType="com.seebon.rpa.entity.robot.vo.RobotClientAppVO"
+                    select="selectTableTaskVO" column="robot_code">
+
+        </collection>
+    </resultMap>
+
+    <resultMap id="ClientAppAndTask" type="com.seebon.rpa.entity.robot.vo.RobotClientAppVO">
+        <result column="id" property="id"/>
+        <result column="app_code" property="appCode"/>
+        <result column="app_name" property="appName"/>
+        <result column="app_args" property="appArgs"/>
+        <result column="version" property="version"/>
+        <result column="status" property="status"/>
+        <result column="comment" property="comment"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="machineCode" property="machineCode"/>
+        <collection property="robotTaskVOS" ofType="com.seebon.rpa.entity.robot.vo.RobotTaskVO">
+            <result column="appCode" property="appCode"/>
+            <result column="clientId" property="clientId"/>
+            <result column="task_code" property="taskCode"/>
+            <result column="task_name" property="taskName"/>
+            <result column="usbPort" property="usbPort"/>
+            <result column="statusName" property="statusName"/>
+            <result column="taskComment" property="comment"/>
+            <result column="run" property="run" />
+            <result column="schedule" property="schedule"/>
+            <result column="taskStatus" property="status"/>
+            <result column="exec_cycle" property="execCycle"/>
+            <result column="exec_area_time" property="execAreaTime"/>
+            <result column="exec_style" property="execStyle"/>
+            <result column="exec_order" property="execOrder"/>
+            <result column="edit_name" property="editName"/>
+            <result column="last_execution_time" property="lastExecutionTime"/>
+            <result column="accountNumber" property="accountNumber"/>
+            <result column="declareAccount" property="declareAccount"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="RobotTaskVOResultMap" type="com.seebon.rpa.entity.robot.vo.RobotTaskVO">
+        <result column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="app_code" property="appCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="task_name" property="taskName"/>
+        <result column="schedule" property="schedule"/>
+        <result column="status" property="status"/>
+        <result column="run" property="run"/>
+        <result column="sync" property="sync"/>
+        <result column="sync_fee" property="syncFee"/>
+        <result column="edit_name" property="editName"/>
+        <result column="exec_cycle" property="execCycle"/>
+        <result column="exec_area_time" property="execAreaTime"/>
+        <result column="exec_style" property="execStyle"/>
+        <result column="task_type" property="taskType"/>
+        <result column="exec_order" property="execOrder"/>
+        <result column="last_execution_time" property="lastExecutionTime"/>
+        <result column="sync_time" property="syncTime"/>
+        <result column="comment" property="comment"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="enable_time" property="enableTime"/>
+    </resultMap>
+
+    <resultMap id="BaseRobotTaskMap" type="com.seebon.rpa.entity.robot.RobotTask">
+        <id column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="app_code" property="appCode"/>
+        <result column="task_code" property="taskCode"/>
+        <result column="task_name" property="taskName"/>
+        <result column="schedule" property="schedule"/>
+        <result column="status" property="status"/>
+        <result column="run" property="run"/>
+        <result column="sync" property="sync"/>
+        <result column="sync_fee" property="syncFee"/>
+        <result column="sync_machine_code" property="syncMachineCode"/>
+        <result column="edit_name" property="editName"/>
+        <result column="exec_cycle" property="execCycle"/>
+        <result column="exec_area_time" property="execAreaTime"/>
+        <result column="exec_style" property="execStyle"/>
+        <result column="task_type" property="taskType"/>
+        <result column="exec_order" property="execOrder"/>
+        <result column="last_execution_time" property="lastExecutionTime"/>
+        <result column="sync_time" property="syncTime"/>
+        <result column="comment" property="comment"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="enable_time" property="enableTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ta.id,ta.client_id,ta.machine_code,ta.app_code,ta.task_code,ta.task_name,ta.schedule,ta.status,ta.run,ta.sync,ta.sync_fee,ta.sync_machine_code,ta.edit_name,
+        ta.exec_cycle,ta.exec_area_time,ta.exec_style,ta.task_type,ta.exec_order,ta.last_execution_time,ta.sync_time,ta.comment,ta.update_time,ta.create_time,ta.enable_time
+    </sql>
+
+    <select id="selectRobotVO" resultMap="RobotVO">
+        select robot_code,robot_name from robot
+    </select>
+
+    <select id="selectCountCityByCustId" resultType="integer">
+        select count(*) from robot_client_app client_id=#{clientId}
+    </select>
+
+    <select id="selectTableTaskVO" resultMap="ClientAppAndTask">
+        SELECT
+            ra.id,
+            tta.args_value declareAccount,
+            (select rtaz.args_value from robot_task_args rtaz where rt.task_code=rtaz.task_code and rtaz.args_key='usbPort') as usbPort,
+            rt.comment as taskComment,
+            case when rt.status=1 and rt.run=1 then '正在执行' when rt.status=1 and rt.run=0 then '未执行' when rt.status=0 then '已停用' else null end as statusName,
+            ra.app_name,
+            ra.app_code,
+            ra.app_args,
+            ra.comment,
+            ra.version,
+            ra.status,
+            ca.machine_code AS machineCode,
+            rt.client_id AS clientId,
+            rt.app_code AS appCode,
+            rt.task_code,
+            rt.task_name,
+            rt.run,
+            /*rt.schedule,*/
+            rt.status AS taskStatus,
+            rt.exec_cycle,
+            rt.exec_area_time,
+            rt.exec_style,
+            rt.exec_order,
+            rt.edit_name,(
+            SELECT
+                MAX( start_time )
+            FROM
+                `robot_execution`
+            WHERE
+                task_code = rt.task_code
+            ) AS last_execution_time,
+            rta.args_value as accountNumber
+        FROM
+            robot_client_app ca
+        LEFT JOIN robot_app ra ON ra.app_code = ca.app_code
+        LEFT JOIN robot_task rt ON ra.app_code = rt.app_code and rt.client_id=ca.client_id and ca.machine_code=rt.machine_code
+        LEFT JOIN robot_task_args rta ON rt.task_code=rta.task_code and rta.args_key in ('socialNumber','accfundNumber')
+        LEFT JOIN  robot_task_args tta ON rt.task_code=tta.task_code and tta.args_key in ('companyName')
+        where
+            ca.client_id=#{clientId}
+        and ca.machine_code = #{machineCode} and ra.app_code is not null
+        <if test="userDeclareAccountList!=null and userDeclareAccountList.size()>0">
+            and  rta.args_value in
+            <foreach collection="userDeclareAccountList" item="item" separator="," open="(" close=")">
+                #{item.accountNumber}
+            </foreach>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (tta.args_value like concat('%',#{keyword},'%') or rta.args_value like concat('%',#{keyword},'%')
+            or ca.machine_code like concat('%',#{keyword},'%') or ra.app_args like concat('%',#{keyword},'%')
+            or ra.app_name like '%${keyword}%'
+            <if test="businessTypeStr!=null">
+                or ra.app_args like concat('%',#{businessTypeStr},'%')
+            </if>
+            )
+        </if>
+        <if test="addrName!=null and addrName!=''">
+            and ra.app_args like concat('%"addrName":"',#{addrName},'"%')
+        </if>
+        <if test="businessType!=null and businessType!=''">
+            and ra.app_args like concat('%',#{businessType},'%')
+        </if>
+    </select>
+
+    <update id="cleanAreaTime" parameterType="integer">
+        update robot_task set exec_area_time = null where id = #{id}
+    </update>
+
+    <update id="updateTaskStatus">
+        update robot_task set status = #{status} where task_code = #{taskCode}
+    </update>
+
+    <update id="updateMachineRun">
+        update robot_task set run = 0,update_time = now() where run=1 and machine_code = #{machineCode} and task_code not in (SELECT DISTINCT task_code from robot_task_queue where `status`=1)
+    </update>
+
+    <update id="updateTaskRun">
+        update robot_task set run = #{run},update_time = now() where task_code = #{taskCode}
+    </update>
+
+    <select id="selectByClientId" resultMap="ClientAppAndTask">
+        SELECT
+            ra.id,
+            ra.app_name,
+            ra.app_code,
+            ra.app_args,
+            ra.comment,
+            ra.version,
+            ra.status,
+            ca.machine_code AS machineCode,
+            rt.client_id AS clientId,
+            rt.app_code AS appCode,
+            rt.task_code,
+            rt.task_name,
+            rt.schedule,
+            rt.run,
+            rt.status AS taskStatus,
+            rt.exec_cycle,
+            rt.exec_area_time,
+            rt.exec_style,
+            rt.exec_order,
+            rt.edit_name,(
+            SELECT
+                MAX( start_time )
+            FROM
+                `robot_execution`
+            WHERE
+                task_code = rt.task_code
+            ) AS last_execution_time,
+            rta.args_value as accountNumber
+        FROM
+            robot_client_app ca
+        LEFT JOIN robot_app ra ON ra.app_code = ca.app_code
+        LEFT JOIN robot_task rt ON ra.app_code = rt.app_code and rt.client_id=ca.client_id and ca.machine_code=rt.machine_code
+        LEFT JOIN robot_task_args rta ON rt.task_code=rta.task_code and rta.args_key in ('socialNumber','accfundNumber')
+        where
+            ca.client_id=#{clientId} and ra.app_code is not null
+        <if test="userDeclareAccountList!=null and userDeclareAccountList.size()>0">
+            and  rta.args_value in
+            <foreach collection="userDeclareAccountList" item="item" separator="," open="(" close=")">
+                #{item.accountNumber}
+            </foreach>
+        </if>
+    </select>
+
+    <update id="cleanSyncTime">
+        UPDATE robot_task SET sync_time = null,sync = 0,sync_fee = 0,sync_machine_code=null WHERE task_code = #{taskCode}
+    </update>
+
+    <update id="cleanSync">
+        UPDATE robot_task SET sync_time = null,sync = 0,sync_fee = 0,sync_machine_code=null WHERE app_code = #{appCode}
+    </update>
+
+    <update id="updateComment">
+        UPDATE robot_task SET comment=#{comment} WHERE task_code = #{taskCode}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE robot_task SET sync_time = null ,sync = 0 ,sync_fee = 0,sync_machine_code=null, status = #{status},comment=#{comment},update_time=now()
+         WHERE app_code = #{appCode} and task_code = #{taskCode}
+    </update>
+
+    <update id="updateTask">
+        UPDATE robot_task SET sync_time = null ,sync = 0,sync_fee = 0 ,sync_machine_code=null, status = #{status},comment=#{comment},edit_name=#{editName}
+        <if test="enableTime!=null">
+            ,enable_time=#{enableTime}
+        </if>
+        WHERE app_code = #{appCode} and task_code = #{taskCode}
+    </update>
+    <update id="updateTaskData">
+        UPDATE robot_task SET sync_time = null ,sync = 0 ,sync_fee = 0,sync_machine_code=null, status = #{status},comment=#{comment},edit_name=#{editName}
+        WHERE app_code = #{appCode}
+    </update>
+
+    <select id="selectByTaskCode" resultType="com.seebon.rpa.entity.robot.dto.design.RobotExecutionMo">
+        SELECT
+            ra.app_code appCode,
+            ra.app_name appName,
+            rf.flow_name flowName,
+            rt.task_name taskName
+        FROM
+            `robot_task` rt
+        LEFT JOIN robot_app ra ON ra.app_code = rt.app_code
+        LEFT JOIN robot_flow rf ON rf.app_code = rt.app_code
+        where
+            rt.task_code=#{taskCode}
+        and rf.flow_code=#{flowCode}
+    </select>
+    <select id="selectAppInfo" resultType="java.util.Map">
+        select rca.client_id,rca.machine_code,rca.app_code,ra.app_name as appName,
+        count(case when rt.run=1 then 1 else null end) as runningCount,
+        count(case when rt.run=0 and rt.`status`=1 then 1 else null end) as startCount,
+        count(case when rt.run=0 and rt.`status`=0 then 1 else null end) as stopCount,
+        (select count(1) from robot_flow rf where rf.app_code=rt.app_code and rf.flow_type=1) as flowCount
+         from
+        robot_client_app rca
+        left join robot_app ra on rca.app_code=ra.app_code
+        left join robot_task rt on rt.app_code=rca.app_code and rca.client_id=rt.client_id and rca.machine_code=rt.machine_code
+        where rca.client_id=#{clientId} and rca.machine_code=#{machineCode} and rca.app_code=#{appCode}
+        group by rca.client_id,rca.machine_code,rca.app_code
+    </select>
+
+    <select id="getRobotTasks" resultType="com.seebon.rpa.entity.robot.dto.RobotTaskInfoDTO">
+        select t.* from(
+        select rt.app_code as appCode,rt.machine_code as machineCode,rt.task_code as taskCode,rt.task_name as taskName,
+        case when rt.run=1 then '正在执行' when rt.`status`=1 then '已启用' when rt.`status`=0 then '已停用' else '' end as taskStatus,
+        ra.app_args as appArgs,
+        rt.`status`,
+        case when ra.app_args like '%1001001%' then (select args_value from robot_task_args rta where
+        rta.task_code=rt.task_code and rta.args_key='socialNumber')
+        when ra.app_args like '%1001002%' then (select args_value from robot_task_args rta where
+        rta.task_code=rt.task_code and rta.args_key='accfundNumber') else '' end as accountNumber,
+        (select args_value from robot_task_args rta where rta.task_code=rt.task_code and rta.args_key='companyName') as
+        orgName,
+        (select args_value from robot_task_args rta where rta.task_code=rt.task_code and rta.args_key='usbPort') as
+        usbPort,
+        (select count(1) from robot_flow rf where rf.app_code=rt.app_code and rf.flow_type=1) as flowCount,
+        rt.edit_name as editName,
+        /*(select count(1) from robot_task_schedule rts where rts.task_code=rt.task_code and rts.status=1) as
+        taskStartCount,*/
+        /*(select count(1) from robot_execution re where re.client_id=rt.client_id and re.machine_code=rt.machine_code
+        and re.task_code=rt.task_code and DATE_FORMAT(re.start_time,'%Y-%m-%d')=DATE_FORMAT(now(),'%Y-%m-%d')) as execCount,*/
+        /*case when (select count(1) from robot_task_schedule rtc where rtc.task_code=rt.task_code and ifnull(rtc.general_plan_id,'')='')>0 then '是' else '否' end as haveCustom,*/
+        rt.`schedule` as execPlant,rt.`comment`
+        from robot_task rt
+        left join robot_app ra on rt.app_code=ra.app_code
+        <where>
+            <if test='clientId!=null and clientId!=""'>
+                and rt.client_id=#{clientId}
+            </if>
+            <if test='machineCode!=null and machineCode!=""'>
+                and rt.machine_code=#{machineCode}
+            </if>
+            <if test='appCode!=null and appCode!=""'>
+                and rt.app_code=#{appCode}
+            </if>
+            <if test='appCode!=null and appCode!=""'>
+                and rt.app_code=#{appCode}
+            </if>
+        </where>)t
+        <where>
+            <if test='searchText!=null and searchText!=""'>
+                t.accountNumber like '%${searchText}%' or t.orgName like '%${searchText}%'
+            </if>
+        </where>
+    </select>
+    <select id="getRobotTaskList" resultType="com.seebon.rpa.entity.robot.dto.RobotTaskInfoDTO">
+        select
+        a.task_code as taskCode,
+        a.app_code as appCode,
+        a.task_name as taskName,
+        case when a.run=1 then '正在执行' when a.`status`=1 then '已启用' when a.`status`=0 then '已停用' else '' end as taskStatus,
+        case when ra.app_args like '%1001001%' then (select args_value from robot_task_args rta where
+        rta.task_code=a.task_code and rta.args_key='socialNumber')
+        when ra.app_args like '%1001002%' then (select args_value from robot_task_args rta where
+        rta.task_code=a.task_code and rta.args_key='accfundNumber') else '' end as accountNumber,
+        (select args_value from robot_task_args rta where rta.task_code=a.task_code and rta.args_key='companyName') as
+        orgName
+        from robot_task a
+        left join robot_app ra on a.app_code=ra.app_code
+        <where>
+            (select ifnull(args_value,'') from robot_task_args rta where rta.task_code=a.task_code and rta.args_key='companyName')!=''
+            and case when ra.app_args like '%1001001%' then (select ifnull(args_value,'') from robot_task_args rta where
+            rta.task_code=a.task_code and rta.args_key='socialNumber')
+            when ra.app_args like '%1001002%' then (select ifnull(args_value,'') from robot_task_args rta where
+            rta.task_code=a.task_code and rta.args_key='accfundNumber') else '' end!=''
+            <if test="clientId!=null">
+                and a.client_id=#{clientId}
+            </if>
+            <if test='appCode!=null and appCode!=""'>
+                and a.app_code=#{appCode}
+            </if>
+        </where>
+    </select>
+    <select id="getAccountNumberByTaksCode" resultType="java.lang.String">
+        select
+        case when ra.app_args like '%1001001%' then concat((select args_value from robot_task_args rta
+        where rta.task_code=a.task_code and rta.args_key='companyName'),'-',(select args_value from robot_task_args rta where
+        rta.task_code=a.task_code and rta.args_key='socialNumber'))
+        when ra.app_args like '%1001002%' then concat((select args_value from robot_task_args rta
+        where rta.task_code=a.task_code and rta.args_key='companyName'),'-',(select args_value from robot_task_args rta where
+        rta.task_code=a.task_code and rta.args_key='accfundNumber')) else '' end as accountNumber
+        from robot_task a
+        left join robot_app ra on a.app_code=ra.app_code where a.task_code=#{taskCode}
+    </select>
+
+    <select id="getRobotTaskExecList" resultType="com.seebon.rpa.entity.robot.dto.monitor.TodayExecDataDTO">
+        select
+        a.client_id as clientId,
+        a.task_code as taskCode,
+        a.task_name as taskName,
+        a.app_code as appCode,
+        b.app_args as appArgs,
+        (select args_value from robot_task_args rta where rta.task_code=a.task_code and rta.args_key='companyName') as orgName,
+        case when b.app_args like '%1001001%' then (select args_value from robot_task_args rta where
+                rta.task_code=a.task_code and rta.args_key='socialNumber')
+            when b.app_args like '%1001002%' then (select args_value from robot_task_args rta where
+                rta.task_code=a.task_code and rta.args_key='accfundNumber') else '' end as accountNumber,
+        a.machine_code as machineCode,rc.machine_factory as machineFactory,
+        case rc.`status` when 0 then '初始化' when 1 then '准备就绪' when 2 then '正在执行'
+                when 3 then '已关闭' when 4 then '程序异常' when 5 then '客户端异常'
+                when 6 then '正在升级' when 7 then '升级失败' when 8 then '离线' else null end as machineStatus,
+                        case b.online_status when 0 then '调研' when 1 then '配置' when 2 then '上线' when 3 then '运维' else '' end as state,
+        case when a.run=1 then '正在执行' when a.`status`=1 then '已启用' when a.`status`=0 then '已停用' else '' end as taskStatus,
+        a.`comment` as taskComment,a.edit_name as taskEditName
+         from robot_task a
+        left join robot_app b on a.app_code=b.app_code
+        left join robot_client rc on a.client_id=rc.client_id and a.machine_code=rc.machine_code
+        <where>
+            <if test="custId!=null" >
+                and a.client_id=#{custId}
+            </if>
+            <if test='taskCode!=null and taskCode!=""'>
+                and a.task_code=#{taskCode}
+            </if>
+            <if test="state!=null" >
+                and b.`online_status`=#{state}
+            </if>
+            <if test="addrId!=null" >
+                and b.app_args like '%${addrId}%'
+            </if>
+            <if test="appArgs!=null and appArgs.size()>0">
+                and b.app_args in
+                <foreach collection="appArgs" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+    </select>
+    <select id="selectRunningCount" resultType="java.lang.Integer">
+        select count(1) from robot_task a
+        left join robot_app b on a.app_code=b.app_code
+        where a.run=1 and
+        exists (
+          select 1 from robot_task_args ta where a.task_code=ta.task_code
+          and (case when #{businessType}='1001001' then ta.args_key='socialNumber' else ta.args_key='accfundNumber' end)
+          and concat(b.app_args,'-',a.client_id,'-', ta.args_value) in
+          <foreach collection="list" item="item" open="(" separator="," close=")">
+              concat('{"addrName":"',#{item.addrName},'","addrId":"',#{item.addrId},'","businessType":"',#{item.businessType},'"}','-',
+              #{item.custId},'-',#{item.accountNumber}
+              )
+          </foreach>
+        )
+    </select>
+    <select id="selectRobotTaskByParams" resultType="com.seebon.rpa.entity.robot.RobotTask">
+        select a.* from robot_task a
+        left join robot_app b on a.app_code=b.app_code
+        where a.client_id=#{clientId} and
+        exists (
+          select 1 from robot_task_args ta where a.task_code=ta.task_code
+          and (case when #{businessType}=1 then ta.args_key='socialNumber' else ta.args_key='accfundNumber' end)
+          and ta.args_value=#{accountNumber}
+          and b.app_args like '%"addrName":"${addrName}"%'
+          and b.app_args like (case when #{businessType}=1 then '%1001001%' else '%1001002%' end)
+        )
+        limit 1
+    </select>
+    <select id="selectStatistics" resultType="com.seebon.rpa.entity.robot.dto.RobotStatisticsDTO">
+      select
+        count(1) as accountTotal,
+        count(case when run=1 then 1 else null end) as runningAccounts,
+        count(case when status=0 then 1 else null end) as stopAccounts
+        from robot_task
+    </select>
+
+    <resultMap id="orgTaskMap" type="com.seebon.rpa.entity.agent.dto.CustOrgTaskDTO">
+        <id column="taskCode" property="taskCode" />
+        <result column="clientId" property="clientId" />
+        <result column="taskName" property="taskName" />
+        <result column="machineCode" property="machineCode" />
+        <result column="appCode" property="appCode" />
+        <result column="appArgs" property="appArgs" />
+        <result column="status" property="status" />
+        <result column="comment" property="comment" />
+        <collection property="flows" ofType="com.seebon.rpa.entity.robot.RobotFlow">
+            <result column="flowCode" property="flowCode" />
+            <result column="flowType" property="flowType" />
+        </collection>
+    </resultMap>
+
+    <select id="getRobotTaskByParams" resultMap="orgTaskMap">
+        select a.client_id as clientId,
+         a.task_code as taskCode,
+         a.task_name as taskName,
+         a.machine_code as machineCode,
+         a.app_code as appCode,
+         a.status,
+         a.comment,
+         b.app_args as appArgs,
+        rf.flow_code as flowCode,
+        rf.flow_type as flowType
+         from robot_task a
+         left join robot_app b on a.app_code=b.app_code
+          left join robot_flow rf on b.app_code=rf.app_code and rf.flow_type=1
+         <where>
+             <if test="clientId!=null">
+                 and a.client_id=#{clientId}
+             </if>
+             <if test='businessType!=null and businessType!=""'>
+                 and b.app_args like '%"businessType":"${businessType}"%'
+             </if>
+             <if test='addrName!=null and addrName!=""'>
+                 and b.app_args like '%"addrName":"${addrName}"%'
+             </if>
+             <if test='orgName!=null and orgName!=""'>
+                 and EXISTS (select 1 from robot_task_args rta where rta.task_code=a.task_code and rta.args_key='companyName' and rta.args_value=#{orgName})
+             </if>
+             <if test="serviceItem!=null">
+                 and rf.service_item=#{serviceItem}
+             </if>
+         </where>
+    </select>
+
+    <select id="selectH5LoginCount" resultType="int">
+        select count(1) from robot_task a
+        <where>
+            a.task_code in
+            <foreach collection="taskCodes" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and EXISTS (select 1 from robot_task_args rta where rta.task_code=a.task_code
+            and rta.args_key in ('socialLoginType', 'accfundLoginType', 'medicalLoginType')
+            and (rta.args_value like '%扫码登录' or rta.args_value like '%短信登录')
+            )
+        </where>
+    </select>
+
+    <select id="selectTaskCount" resultType="integer">
+      select count(1) from robot_task rt
+      left join robot_app ra on rt.app_code=ra.app_code
+      where ra.app_args is not null
+      and rt.client_id=#{clientId}
+      and ra.app_args like '%${businessType}%'
+    </select>
+
+    <select id="getRobotTaskInfo" resultType="com.seebon.rpa.entity.robot.dto.RobotTaskStatusChangeSendDTO">
+        SELECT
+            rt.machine_code as machineCode,
+            rt.`status`,
+            rt.client_id as clientId,
+            case rt.`status`
+                when 0 then '已停用'
+                when 1 then '已启用'
+                else ''
+                end statusText,
+            ra.app_name as appName,
+            ra.app_args as appArgs,
+            (select args_value from robot_task_args rta where rt.task_code = rta.task_code and args_key in ("socialNumber", "accfundNumber") limit 1) accountNumber, -- 申报账户编号
+            (select args_value from robot_task_args rta where rt.task_code = rta.task_code and args_key in ("companyName") limit 1) companyName,
+            1
+        FROM
+            robot_task rt
+            left join robot_app ra on rt.app_code = ra.app_code
+        WHERE
+            1 = 1
+            AND rt.task_code = #{taskCode}
+            AND rt.app_code = #{appCode}
+    </select>
+
+    <resultMap id="RobotTaskMap" type="com.seebon.rpa.entity.robot.vo.RobotTaskVO">
+        <id column="taskCode" property="taskCode"/>
+        <result column="clientId" property="clientId"/>
+        <result column="taskName" property="taskName"/>
+        <result column="machineCode" property="machineCode"/>
+        <result column="appCode" property="appCode"/>
+        <result column="appName" property="appName"/>
+        <result column="appArgs" property="appArgs"/>
+        <result column="orgName" property="orgName"/>
+        <result column="accountNumber" property="accountNumber"/>
+        <result column="fixMachine" property="fixMachine"/>
+        <collection property="taskArgsList" ofType="com.seebon.rpa.entity.robot.RobotTaskArgs">
+            <result column="argsKey" property="argsKey"/>
+            <result column="argsValue" property="argsValue"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectAllTask" resultMap="RobotTaskMap">
+        SELECT
+              temp.clientId,temp.machineCode,temp.appCode,temp.appName,temp.appArgs,temp.taskCode,
+              temp.taskName,temp.orgName,temp.accountNumber,temp.argsKey,temp.argsValue,temp.fixMachine
+        FROM (
+             SELECT
+                 ca.fix_machine fixMachine,
+                 ca.app_name appName,
+                 rt.client_id clientId,
+                 rt.machine_code machineCode,
+                 rt.app_code appCode,
+                 rt.task_code taskCode,
+                 rt.task_name taskName,
+                 ra.app_args appArgs,
+                 ( SELECT rta.args_value FROM robot_task_args rta WHERE rta.task_code = rt.task_code AND rta.args_key = 'companyName' ) AS orgName,
+                 ( SELECT rta.args_value FROM robot_task_args rta WHERE rta.task_code = rt.task_code AND rta.args_key IN ( 'socialNumber', 'accfundNumber' ) ) AS accountNumber,
+                 arg.args_key argsKey,
+                 arg.args_value argsValue
+             FROM
+                robot_client_app ca
+             LEFT JOIN robot_task rt ON rt.app_code = ca.app_code AND rt.client_id = ca.client_id AND rt.machine_code = ca.machine_code
+             LEFT JOIN robot_app ra ON rt.app_code = ra.app_code
+             LEFT JOIN (SELECT * from robot_task_args ar where 1=1 <if test="loginTypeList != null and loginTypeList.size != 0">
+                and ar.args_key IN
+                <foreach collection="loginTypeList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>  ) arg ON arg.task_code = rt.task_code
+             WHERE
+                 1 = 1
+             AND ra.app_args IS NOT NULL
+             <if test='status!=null and status!=""'>
+                 AND rt.`status` = #{status}
+             </if>
+             <if test='taskCode!=null and taskCode!=""'>
+                and rt.task_code=#{taskCode}
+             </if>
+             <if test='appName !=null and appName!=""'>
+                 and ra.app_name=#{appName}
+             </if>
+             <if test='appArgs_addrName != null and appArgs_addrName != ""'>
+                 and ra.app_args like '%"addrName":"${appArgs_addrName}"%'
+             </if>
+             <if test='appArgs_businessType != null and appArgs_businessType != ""'>
+                 and ra.app_args like '%"businessType":"${appArgs_businessType}"%'
+             </if>
+            <if test="taskCodeList != null and taskCodeList.size != 0">
+                and rt.task_code IN
+                <foreach collection="taskCodeList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="appCodeList != null and appCodeList.size != 0">
+                and ca.app_code IN
+                <foreach collection="appCodeList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="argsKey != null and argsKey != ''">
+                and arg.args_key = #{argsKey}
+            </if>
+            <if test="argsValue != null and argsValue != ''">
+                and arg.args_value = #{argsValue}
+            </if>
+         ) temp
+        WHERE
+            1 = 1
+          AND LENGTH( temp.accountNumber ) > 0
+    </select>
+
+    <select id="selectUnSyncTask" resultMap="BaseRobotTaskMap">
+        SELECT
+            <include refid="Base_Column_List"/>
+        FROM
+            robot_task ta
+        where
+            1 = 1
+        AND ta.app_code in (
+            SELECT distinct app_code FROM robot_client_app ca where ca.client_id = #{clientId}
+        )
+        AND ta.client_id = #{clientId}
+        AND (ta.sync_machine_code is null or ta.sync_machine_code not like concat('%',#{machineCode},'%'))
+    </select>
+</mapper>

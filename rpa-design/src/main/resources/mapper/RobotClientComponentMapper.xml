@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seebon.rpa.repository.mysql.RobotClientComponentDao">
+
+    <resultMap id="clientComponent" type="com.seebon.rpa.entity.robot.RobotClientComponent">
+        <result column="id" property="id"/>
+        <result column="client_id" property="clientId"/>
+        <result column="robot_code" property="robotCode"/>
+        <result column="component" property="component"/>
+        <result column="version" property="version"/>
+        <result column="create_time" property="createTime"/>
+        <result column="login_time" property="loginTime" javaType="DATE"/>
+    </resultMap>
+
+    <select id="selectClientComponentByRobotCode" resultMap="clientComponent">
+        SELECT *
+        FROM robot_client_component
+        WHERE robot_code = #{robotCode}
+          AND component = #{component}
+    </select>
+    <update id="updateClientComponent" parameterType="com.seebon.rpa.entity.robot.RobotClientComponent">
+        UPDATE robot_client_component
+        SET `id`=#{id},
+            client_id=#{clientId},
+            robot_code=#{robotCode},
+            component=#{component},
+            `version`=#{version},
+            create_time=#{createTime},
+            login_time=#{loginTime}
+        WHERE robot_code = #{robotCode}
+          AND component = #{component}
+    </update>
+    <insert id="insertClientComponent" parameterType="com.seebon.rpa.entity.robot.RobotClientComponent">
+        INSERT INTO robot_client_component
+        (id, client_id, robot_code, component, `version`, create_time, login_time)
+            VALUE (#{id},#{clientId},#{robotCode},#{component},#{version},#{createTime},#{loginTime})
+    </insert>
+</mapper>  

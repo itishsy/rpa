@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seebon.rpa.repository.mapper.RobotExecutionDataMapper">
+    <resultMap id="BaseResultMap" type="com.seebon.rpa.entity.robot.RobotExecutionData">
+        <id column="id" property="id"/>
+        <result column="execution_code" property="executionCode"/>
+        <result column="batch_code" property="batchCode"/>
+        <result column="addrName" property="addrName"/>
+        <result column="businessType" property="businessType"/>
+        <result column="declareType" property="declareType"/>
+        <result column="dataType" property="dataType"/>
+        <result column="accountNumber" property="accountNumber"/>
+        <result column="name" property="name"/>
+        <result column="idCard" property="idCard"/>
+        <result column="declareMonth" property="declareMonth"/>
+        <result column="extend" property="extend"/>
+        <result column="tplTypeCode" property="tplTypeCode"/>
+        <result column="declareStatus" property="declareStatus"/>
+        <result column="robotExecStatus" property="robotExecStatus"/>
+        <result column="failType" property="failType"/>
+        <result column="failreason" property="failReason"/>
+        <result column="sync" property="sync"/>
+        <result column="syncFailReason" property="syncFailReason"/>
+        <result column="syncTime" property="syncTime"/>
+        <result column="createTime" property="createTime"/>
+        <result column="operationType" property="operationType"/>
+        <result column="nodeComment" property="nodeComment"/>
+        <result column="client_id" property="clientId"/>
+        <result column="machine_code" property="machineCode"/>
+        <result column="flagType" property="flagType"/>
+        <result column="uuid" property="uuid"/>
+    </resultMap>
+</mapper>
